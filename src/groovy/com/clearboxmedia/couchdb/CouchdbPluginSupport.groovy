@@ -12,8 +12,9 @@ public class CouchdbPluginSupport {
     static doWithApplicationContext = { ApplicationContext applicationContext ->
          for(GrailsDomainClass dc in application.domainClasses) {
              println("domain class is : " + dc)
-             def clazz = dc.class
-             if(clazz.getAnnotation(CouchDBEntity.class) != null) {
+             def clazz = dc.clazz
+             println ("clazz is ${clazz}")
+             if(clazz.isAnnotationPresent(CouchDBEntity)) {
                  println("domain class: ${dc.name} is a couchdb class")
              } else {
                  println("domain class: ${dc.name} is a regular domain class")

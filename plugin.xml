@@ -8,6 +8,7 @@ A plugin that emulates the behavior of the GORM-Hibernate plugin against a Couch
   <resources>
     <resource>DataSource</resource>
     <resource>UrlMappings</resource>
+    <resource>org.acme.NotCouchdb</resource>
     <resource>org.acme.Project</resource>
   </resources>
   <dependencies />
