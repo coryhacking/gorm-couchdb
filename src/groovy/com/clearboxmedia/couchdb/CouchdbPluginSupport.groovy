@@ -12,22 +12,23 @@ public class CouchdbPluginSupport {
     static couchdbProps = [:]
     static couchdbConfigClass
 
-    //temporary
-    Database db = new Database("localhost", "gorm-couchdb-test")
+
 
     static doWithApplicationContext = {ApplicationContext applicationContext ->
+        //temporary
+        Database db = new Database("localhost", "gorm-couchdb-test")
         for (GrailsDomainClass dc in application.domainClasses) {
             def clazz = dc.clazz
+            println "clazz is ${clazz}"
             if (clazz.isAnnotationPresent(CouchDBEntity)) {
-                Class entityClass = dc.class
-                application.addArtefact(CouchdbDomainClassArtefactHandler.TYPE, new CouchdbGrailsDomainClass(entityClass))
+                application.addArtefact(CouchdbDomainClassArtefactHandler.TYPE, new CouchdbGrailsDomainClass(clazz))
 
                 //now we can start registering the standard methods
-                entityClass.metaClass {
+                clazz.metaClass {
                     'static' {
                         //Foo.get(1)
                         get {Serializable id ->
-                            db.getDocument(entityClass, id)
+                            db.getDocument(clazz, id)
                         }
 
                         //Foo.exists(1)

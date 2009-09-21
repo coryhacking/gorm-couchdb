@@ -68,10 +68,19 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CouchdbPluginSupport.groovy" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="CouchdbPluginSupport.groovy" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/groovy/com/clearboxmedia/couchdb/CouchdbPluginSupport.groovy">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="42" column="43" selection-start="1680" selection-end="1680" vertical-scroll-proportion="0.0">
+            <state line="23" column="108" selection-start="874" selection-end="898" vertical-scroll-proportion="0.28424305">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="BasicPersistenceMethodTests.groovy" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/integration/com/clearboxmedia/couchdb/BasicPersistenceMethodTests.groovy">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="14" column="30" selection-start="293" selection-end="293" vertical-scroll-proportion="-4.8">
               <folding />
             </state>
           </provider>
@@ -92,7 +101,7 @@
       <file leaf-file-name="CouchdbDomainClassArtefactHandler.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbDomainClassArtefactHandler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="8" selection-start="8" selection-end="40" vertical-scroll-proportion="0.0">
+            <state line="15" column="41" selection-start="575" selection-end="580" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -100,10 +109,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CouchdbGrailsDomainClass.java" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="CouchdbGrailsDomainClass.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbGrailsDomainClass.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="36" column="22" selection-start="1633" selection-end="1633" vertical-scroll-proportion="0.45521602">
+            <state line="36" column="19" selection-start="1625" selection-end="1630" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -194,6 +203,50 @@
         </PATH_ELEMENT>
         <PATH_ELEMENT>
           <option name="myItemId" value="gorm-couchdb" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+      </PATH>
+      <PATH>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="gorm-couchdb" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="gorm-couchdb" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="gorm-couchdb" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="test" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+      </PATH>
+      <PATH>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="gorm-couchdb" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="gorm-couchdb" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="gorm-couchdb" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="test" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="integration" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="couchdb" />
           <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
         </PATH_ELEMENT>
       </PATH>
@@ -374,6 +427,13 @@
       <option name="VM_PARAMETERS" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
+    </configuration>
+    <configuration default="true" type="GrailsTestsRunConfigurationType" factoryName="Grails Tests">
+      <module name="" />
+      <setting name="vmparams" value="" />
+      <setting name="grailsparams" value="" />
+      <setting name="names" value="" />
+      <setting name="type" value="0" />
     </configuration>
     <configuration default="true" type="TestNG" factoryName="TestNG" enabled="false" merge="false" runner="emma">
       <module name="" />
@@ -585,15 +645,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbDomainClassArtefactHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="8" selection-start="8" selection-end="40" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/GormCouchdbGrailsPlugin.groovy">
       <provider selected="true" editor-type-id="text-editor">
         <state line="2" column="0" selection-start="36" selection-end="36" vertical-scroll-proportion="0.0">
@@ -601,19 +652,35 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/groovy/com/clearboxmedia/couchdb/CouchdbPluginSupport.groovy">
+    <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbDomainClassArtefactHandler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="42" column="43" selection-start="1680" selection-end="1680" vertical-scroll-proportion="0.0">
-          <folding />
+        <state line="15" column="41" selection-start="575" selection-end="580" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbGrailsDomainClass.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="22" selection-start="1633" selection-end="1633" vertical-scroll-proportion="0.45521602">
+        <state line="36" column="19" selection-start="1625" selection-end="1630" vertical-scroll-proportion="0.0">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/integration/com/clearboxmedia/couchdb/BasicPersistenceMethodTests.groovy">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="30" selection-start="293" selection-end="293" vertical-scroll-proportion="-4.8">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/groovy/com/clearboxmedia/couchdb/CouchdbPluginSupport.groovy">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="23" column="108" selection-start="874" selection-end="898" vertical-scroll-proportion="0.28424305">
+          <folding />
         </state>
       </provider>
     </entry>
