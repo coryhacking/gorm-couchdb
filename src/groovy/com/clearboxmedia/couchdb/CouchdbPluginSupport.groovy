@@ -37,8 +37,18 @@ public class CouchdbPluginSupport {
                         }
 
                         save {Map args = [:] ->
+
+                            println "delegate name is ${delegate.name}"
                             if (delegate.validate()) {
-                                println "delegate is ${delegate}"
+                                println "delegate properties ${delegate.propertyMap}"
+                                //for now have couch create our id for this object, do want to customize this later though
+                                if (delegate.id != null && delegate.id != "") {
+                                    def doc = delegate.getProperties()
+                                    doc["type"] = delegate.type
+                                    def id = db.createDocument(doc)
+                                    delegate.id = id;
+                                }
+
                                 return delegate
                             } else {
                                 return null

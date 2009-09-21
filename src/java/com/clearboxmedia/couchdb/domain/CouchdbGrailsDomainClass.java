@@ -5,6 +5,7 @@ import org.codehaus.groovy.grails.commons.GrailsDomainClass;
 import org.codehaus.groovy.grails.commons.AbstractGrailsClass;
 import org.codehaus.groovy.grails.exceptions.GrailsDomainException;
 import org.codehaus.groovy.grails.validation.metaclass.ConstraintsEvaluatingDynamicProperty;
+import org.codehaus.groovy.grails.validation.ConstrainedProperty;
 import org.springframework.validation.Validator;
 import org.springframework.beans.BeanUtils;
 
@@ -22,6 +23,7 @@ import java.lang.reflect.ParameterizedType;
 import com.clearboxmedia.couchdb.CouchDBEntity;
 import com.clearboxmedia.couchdb.CouchDBId;
 import com.clearboxmedia.couchdb.CouchDBRev;
+import com.clearboxmedia.couchdb.CouchDBType;
 
 public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements GrailsDomainClass {
     private Map<String, GrailsDomainClassProperty> propertyMap = new HashMap<String, GrailsDomainClassProperty>();
@@ -29,6 +31,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     private GrailsDomainClassProperty[] propertiesArray;
     private CouchdbDomainClassProperty identifier;
     private CouchdbDomainClassProperty version;
+    private CouchdbDomainClassProperty type;
     private Validator validator;
     private GrailsDomainClassProperty[] persistentPropertyArray;
     private Map constrainedProperties = Collections.EMPTY_MAP;
@@ -36,8 +39,8 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     public CouchdbGrailsDomainClass(Class clazz) {
         super(clazz, "");
         Annotation entityAnnotation = clazz.getAnnotation(CouchDBEntity.class);
-        if(entityAnnotation == null) {
-            throw new GrailsDomainException("Class ["+clazz.getName()+"] is not annotated with com.clearboxmedia.couchdb.CouchDBEntity!");
+        if (entityAnnotation == null) {
+            throw new GrailsDomainException("Class [" + clazz.getName() + "] is not annotated with com.clearboxmedia.couchdb.CouchDBEntity!");
         }
         PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(clazz);
         evaluateClassProperties(descriptors);
@@ -56,15 +59,15 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
 
             final CouchdbDomainClassProperty property = new CouchdbDomainClassProperty(this, descriptor);
 
-            if(property.isAnnotatedWith(CouchDBId.class)) {
+            if (property.isAnnotatedWith(CouchDBId.class)) {
                 this.identifier = property;
-            }
-            else if(property.isAnnotatedWith(CouchDBRev.class)) {
+            } else if (property.isAnnotatedWith(CouchDBRev.class)) {
                 this.version = property;
-            }
-            else {
+            } else if (property.isAnnotatedWith(CouchDBType.class)) {
+                this.type = property;
+            } else {
                 propertyMap.put(descriptor.getName(), property);
-                if(property.isPersistent()) {
+                if (property.isPersistent()) {
                     persistentProperties.put(descriptor.getName(), property);
                 }
             }
@@ -97,6 +100,10 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         return this.version;
     }
 
+    public GrailsDomainClassProperty getType() {
+        return this.type;
+    }
+
     public Map getAssociationMap() {
         return Collections.EMPTY_MAP;
     }
@@ -112,12 +119,12 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
 
     public boolean isOneToMany(String propertyName) {
         GrailsDomainClassProperty prop = getPropertyByName(propertyName);
-        return prop!=null&&prop.isOneToMany();
+        return prop != null && prop.isOneToMany();
     }
 
     public boolean isManyToOne(String propertyName) {
         GrailsDomainClassProperty prop = getPropertyByName(propertyName);
-        return prop!=null&&prop.isManyToOne();
+        return prop != null && prop.isManyToOne();
     }
 
     public boolean isBidirectional(String propertyName) {
@@ -138,11 +145,11 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     }
 
     public void setValidator(Validator validator) {
-        this.validator=validator;
+        this.validator = validator;
     }
 
     public String getMappingStrategy() {
-        return "JPA";
+        return "CouchDB";
     }
 
     public boolean isRoot() {
@@ -201,7 +208,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public <T extends java.lang.annotation.Annotation> T getAnnotation(Class<T> annotation) {
-            if(field==null) return null;
+            if (field == null) return null;
             return this.field.getAnnotation(annotation);
         }
 
@@ -218,11 +225,11 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public Class getReferencedPropertyType() {
-            if(Collection.class.isAssignableFrom(getType())) {
+            if (Collection.class.isAssignableFrom(getType())) {
                 final Type genericType = field.getGenericType();
-                if(genericType instanceof ParameterizedType) {
+                if (genericType instanceof ParameterizedType) {
                     final Type[] arguments = ((ParameterizedType) genericType).getActualTypeArguments();
-                    if(arguments.length>0)
+                    if (arguments.length > 0)
                         return (Class) arguments[0];
                 }
             }
@@ -246,7 +253,8 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public boolean isOptional() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            ConstrainedProperty constrainedProperty = (ConstrainedProperty) domainClass.getConstrainedProperties().get(name);
+            return (constrainedProperty != null) && constrainedProperty.isNullable();
         }
 
         public boolean isIdentity() {
@@ -334,8 +342,8 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public boolean isAnnotatedWith(Class annotation) {
-            if(field==null) return false;
-            return field.getAnnotation(annotation)!=null;
+            if (field == null) return false;
+            return field.getAnnotation(annotation) != null;
         }
     }
 }

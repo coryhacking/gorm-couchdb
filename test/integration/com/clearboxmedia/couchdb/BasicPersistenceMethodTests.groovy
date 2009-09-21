@@ -5,21 +5,23 @@ import org.acme.Project
 
 public class BasicPersistenceMethodTests extends GroovyTestCase {
     static transactional = false
-    
+
+    void testValidation() {
+        def p = new Project(name: "")
+        assertNull "should not have validated", p.save()
+
+    }
+
     void testSaveAndGet() {
 
-          def p = new Project(name:"InConcert")
-          p.save()
+        def p = new Project(name: "InConcert")
+        p.save(flush:true)
 
 
-          p = Project.get(p.id)
+        println "id from saved project is ${p.id}"
+        //p = Project.get(p.id)
 
-          assertNotNull "should have retrieved a project", p
-
-          // test get(..) with a string for type conversion
-          p = Project.get(p.id.toString())
-
-          assertNotNull "should have retrieved a project", p
+        assertNotNull "should have retrieved a project", p
     }
 
 }
