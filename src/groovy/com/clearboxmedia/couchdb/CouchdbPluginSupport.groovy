@@ -17,10 +17,10 @@ public class CouchdbPluginSupport {
     static doWithApplicationContext = {ApplicationContext applicationContext ->
         //temporary
         Database db = new Database("localhost", "gorm-couchdb-test")
-        for (GrailsDomainClass dc in application.domainClasses) {
+        for (CouchdbGrailsDomainClass dc in application.domainClasses) {
             def clazz = dc.clazz
-            println "clazz is ${clazz}"
             if (clazz.isAnnotationPresent(CouchDBEntity)) {
+            println "clazz is ${clazz}"
                 application.addArtefact(CouchdbDomainClassArtefactHandler.TYPE, new CouchdbGrailsDomainClass(clazz))
 
                 //now we can start registering the standard methods
@@ -37,16 +37,20 @@ public class CouchdbPluginSupport {
                         }
 
                         save {Map args = [:] ->
-
+                            if(!clazz.isAnnotationPresent(CouchDBEntity)) {
+                                println "returning delegate ${delegate.name}"
+                                return delegate
+                            }
                             println "delegate name is ${delegate.name}"
                             if (delegate.validate()) {
-                                println "delegate properties ${delegate.propertyMap}"
                                 //for now have couch create our id for this object, do want to customize this later though
                                 if (delegate.id != null && delegate.id != "") {
-                                    def doc = delegate.getProperties()
-                                    doc["type"] = delegate.type
-                                    def id = db.createDocument(doc)
-                                    delegate.id = id;
+                                    Map document = CouchdbPluginSupport.createDocumentMap(dc, delegate, false)
+                                    db.createDocument(document)
+                                } else {
+                                    Map document = CouchdbPluginSupport.createDocumentMap(dc, delegate, true)
+                                    def id = db.createDocument(document)
+                                    delegate.id = id
                                 }
 
                                 return delegate
@@ -62,6 +66,23 @@ public class CouchdbPluginSupport {
             }
         }
 
+    }
+
+    private static Map createDocumentMap(GrailsDomainClass dc, GroovyObject delegate, boolean newDocument) {
+        println "calling createDocumentMap"
+        Map document = [:]
+        if (newDocument) {
+            document["id"] = delegate.id
+        } else {
+            document["_id"] = delegate.id
+        }
+        document["type"] = delegate.type
+        println "dc properties are ${dc.getProperties()}"
+        dc.getProperties().each() {key, value ->
+            println "key is ${key}, delgate value is " + delegate."${key}"
+            document["${key}"] = delegate."${key}"
+        }
+        return document
     }
 
 

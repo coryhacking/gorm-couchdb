@@ -2,8 +2,8 @@
 <project relativePaths="false" version="4">
   <component name="ChangeListManager">
     <list default="true" name="Default" comment="" />
-    <ignored path=".idea/workspace.xml" />
     <ignored path="gorm-couchdb.iws" />
+    <ignored path=".idea/workspace.xml" />
   </component>
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="Commander">
@@ -59,19 +59,19 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="GormCouchdbGrailsPlugin.groovy" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="GormCouchdbGrailsPlugin.groovy" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/GormCouchdbGrailsPlugin.groovy">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="27" column="8" selection-start="856" selection-end="880" vertical-scroll-proportion="0.3272727">
+            <state line="27" column="8" selection-start="856" selection-end="880" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CouchdbPluginSupport.groovy" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="CouchdbPluginSupport.groovy" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/groovy/com/clearboxmedia/couchdb/CouchdbPluginSupport.groovy">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="42" column="83" selection-start="1628" selection-end="1628" vertical-scroll-proportion="0.0">
+            <state line="63" column="21" selection-start="2719" selection-end="2719" vertical-scroll-proportion="0.6363636">
               <folding />
             </state>
           </provider>
@@ -80,7 +80,7 @@
       <file leaf-file-name="BasicPersistenceMethodTests.groovy" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/integration/com/clearboxmedia/couchdb/BasicPersistenceMethodTests.groovy">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="10" column="56" selection-start="283" selection-end="283" vertical-scroll-proportion="-3.4285715">
+            <state line="10" column="56" selection-start="283" selection-end="283" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -90,9 +90,7 @@
         <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbDomainClassArtefactHandler.java">
           <provider selected="true" editor-type-id="text-editor">
             <state line="15" column="41" selection-start="575" selection-end="580" vertical-scroll-proportion="0.0">
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
+              <folding />
             </state>
           </provider>
         </entry>
@@ -100,10 +98,8 @@
       <file leaf-file-name="CouchdbGrailsDomainClass.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbGrailsDomainClass.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="28" column="62" selection-start="1166" selection-end="1177" vertical-scroll-proportion="-5.8461537">
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
+            <state line="35" column="37" selection-start="1600" selection-end="1625" vertical-scroll-proportion="0.0">
+              <folding />
             </state>
           </provider>
         </entry>
@@ -111,7 +107,7 @@
       <file leaf-file-name="Project.groovy" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/grails-app/domain/org/acme/Project.groovy">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="25" column="25" selection-start="509" selection-end="509" vertical-scroll-proportion="-5.357143">
+            <state line="25" column="25" selection-start="509" selection-end="509" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -389,13 +385,6 @@
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
     </configuration>
-    <configuration default="true" type="GrailsTestsRunConfigurationType" factoryName="Grails Tests">
-      <module name="" />
-      <setting name="vmparams" value="" />
-      <setting name="grailsparams" value="" />
-      <setting name="names" value="" />
-      <setting name="type" value="0" />
-    </configuration>
     <configuration default="true" type="TestNG" factoryName="TestNG" enabled="false" merge="false" runner="emma">
       <module name="" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
@@ -421,6 +410,13 @@
       <envs />
       <properties />
       <listeners />
+    </configuration>
+    <configuration default="true" type="GrailsTestsRunConfigurationType" factoryName="Grails Tests">
+      <module name="" />
+      <setting name="vmparams" value="" />
+      <setting name="grailsparams" value="" />
+      <setting name="names" value="" />
+      <setting name="type" value="0" />
     </configuration>
     <configuration default="true" type="JUnit" factoryName="JUnit" enabled="false" merge="false" runner="emma">
       <module name="" />
@@ -500,7 +496,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="7" y="22" width="1580" height="1160" extended-state="0" />
+    <frame x="-1" y="22" width="1580" height="1160" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Web Preview" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" />
@@ -516,7 +512,6 @@
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" />
-      <window_info id="Grails" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3297975" sideWeight="0.5" order="-1" side_tool="false" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" />
@@ -525,6 +520,7 @@
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" />
+      <window_info id="Grails" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3297975" sideWeight="0.5" order="7" side_tool="false" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" />
     </layout>
@@ -565,25 +561,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/grails-app/domain/org/acme/NotCouchdb.groovy">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="16" selection-start="100" selection-end="100" vertical-scroll-proportion="-1.9285715">
-          <folding />
-        </state>
-      </provider>
-      <provider editor-type-id="org.jetbrains.plugins.grails.perspectives.DomainClassesRelationsEditorProvider">
-        <state />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbDomainClassArtefactHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="15" column="41" selection-start="575" selection-end="580" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/CouchDBEntity.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="4" column="0" selection-start="68" selection-end="143" vertical-scroll-proportion="0.0">
@@ -614,14 +591,23 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test/integration/com/clearboxmedia/couchdb/BasicPersistenceMethodTests.groovy">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="10" column="56" selection-start="283" selection-end="283" vertical-scroll-proportion="-3.4285715">
+        <state line="10" column="56" selection-start="283" selection-end="283" vertical-scroll-proportion="0.0">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbDomainClassArtefactHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="15" column="41" selection-start="575" selection-end="580" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/grails-app/domain/org/acme/Project.groovy">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="25" column="25" selection-start="509" selection-end="509" vertical-scroll-proportion="-5.357143">
+        <state line="25" column="25" selection-start="509" selection-end="509" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -629,25 +615,33 @@
         <state />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbGrailsDomainClass.java">
+    <entry file="file://$PROJECT_DIR$/GormCouchdbGrailsPlugin.groovy">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="62" selection-start="1166" selection-end="1177" vertical-scroll-proportion="-5.8461537">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/groovy/com/clearboxmedia/couchdb/CouchdbPluginSupport.groovy">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="42" column="83" selection-start="1628" selection-end="1628" vertical-scroll-proportion="0.0">
+        <state line="27" column="8" selection-start="856" selection-end="880" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/GormCouchdbGrailsPlugin.groovy">
+    <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbGrailsDomainClass.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="8" selection-start="856" selection-end="880" vertical-scroll-proportion="0.3272727">
+        <state line="35" column="37" selection-start="1600" selection-end="1625" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/grails-app/domain/org/acme/NotCouchdb.groovy">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="9" column="16" selection-start="100" selection-end="100" vertical-scroll-proportion="-1.9285715">
+          <folding />
+        </state>
+      </provider>
+      <provider editor-type-id="org.jetbrains.plugins.grails.perspectives.DomainClassesRelationsEditorProvider">
+        <state />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/groovy/com/clearboxmedia/couchdb/CouchdbPluginSupport.groovy">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="63" column="21" selection-start="2719" selection-end="2719" vertical-scroll-proportion="0.6363636">
           <folding />
         </state>
       </provider>
