@@ -8,6 +8,7 @@ import org.codehaus.groovy.grails.validation.metaclass.ConstraintsEvaluatingDyna
 import org.codehaus.groovy.grails.validation.ConstrainedProperty;
 import org.springframework.validation.Validator;
 import org.springframework.beans.BeanUtils;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 import grails.util.GrailsNameUtils;
@@ -55,18 +56,23 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     }
 
     private void evaluateClassProperties(PropertyDescriptor[] descriptors) {
+        System.out.println("[evaluateClassProperties] called");
         for (PropertyDescriptor descriptor : descriptors) {
 
             final CouchdbDomainClassProperty property = new CouchdbDomainClassProperty(this, descriptor);
 
             if (property.isAnnotatedWith(CouchDBId.class)) {
+                System.out.println("id property is : " + descriptor.getName());
                 this.identifier = property;
             } else if (property.isAnnotatedWith(CouchDBRev.class)) {
+                System.out.println("version property is : " + descriptor.getName());
                 this.version = property;
             } else if (property.isAnnotatedWith(CouchDBType.class)) {
+                System.out.println("type property is : " + descriptor.getName());
                 this.type = property;
             } else {
                 propertyMap.put(descriptor.getName(), property);
+                System.out.println("property is : " + descriptor.getName() + ", persistence is " + property.isPersistent());
                 if (property.isPersistent()) {
                     persistentProperties.put(descriptor.getName(), property);
                 }
@@ -189,7 +195,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         private Class type;
         private GrailsDomainClass domainClass;
         private Method getter;
-        private boolean persistent;
+        private boolean persistent = true;
         private Field field;
         private boolean version;
 
@@ -344,6 +350,30 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         public boolean isAnnotatedWith(Class annotation) {
             if (field == null) return false;
             return field.getAnnotation(annotation) != null;
+        }
+
+        public String toString() {
+            String assType = null;
+            if (isManyToMany()) {
+                assType = "many-to-many";
+            } else if (isOneToMany()) {
+                assType = "one-to-many";
+            } else if (isOneToOne()) {
+                assType = "one-to-one";
+            } else if (isManyToOne()) {
+                assType = "many-to-one";
+            } else if (isEmbedded()) {
+                assType = "embedded";
+            }
+            return new ToStringBuilder(this)
+                    .append("name", this.name)
+                    .append("type", this.type)
+                    .append("persistent", isPersistent())
+                    .append("optional", isOptional())
+                    .append("association", isAssociation())
+                    .append("bidirectional", isBidirectional())
+                    .append("association-type", assType)
+                    .toString();
         }
     }
 }

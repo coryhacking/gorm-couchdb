@@ -71,7 +71,7 @@
       <file leaf-file-name="CouchdbPluginSupport.groovy" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/groovy/com/clearboxmedia/couchdb/CouchdbPluginSupport.groovy">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="63" column="21" selection-start="2719" selection-end="2719" vertical-scroll-proportion="0.6363636">
+            <state line="77" column="52" selection-start="3033" selection-end="3033" vertical-scroll-proportion="0.8424242">
               <folding />
             </state>
           </provider>
@@ -98,8 +98,10 @@
       <file leaf-file-name="CouchdbGrailsDomainClass.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbGrailsDomainClass.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="35" column="37" selection-start="1600" selection-end="1625" vertical-scroll-proportion="0.0">
-              <folding />
+            <state line="224" column="29" selection-start="8424" selection-end="8431" vertical-scroll-proportion="-14.769231">
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -107,7 +109,7 @@
       <file leaf-file-name="Project.groovy" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/grails-app/domain/org/acme/Project.groovy">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="25" column="25" selection-start="509" selection-end="509" vertical-scroll-proportion="0.0">
+            <state line="16" column="4" selection-start="300" selection-end="312" vertical-scroll-proportion="-2.7857144">
               <folding />
             </state>
           </provider>
@@ -605,9 +607,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/grails-app/domain/org/acme/Project.groovy">
+    <entry file="file://$PROJECT_DIR$/grails-app/domain/org/acme/NotCouchdb.groovy">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="25" column="25" selection-start="509" selection-end="509" vertical-scroll-proportion="0.0">
+        <state line="9" column="16" selection-start="100" selection-end="100" vertical-scroll-proportion="-1.9285715">
           <folding />
         </state>
       </provider>
@@ -622,16 +624,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbGrailsDomainClass.java">
+    <entry file="file://$PROJECT_DIR$/grails-app/domain/org/acme/Project.groovy">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="35" column="37" selection-start="1600" selection-end="1625" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/grails-app/domain/org/acme/NotCouchdb.groovy">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="16" selection-start="100" selection-end="100" vertical-scroll-proportion="-1.9285715">
+        <state line="16" column="4" selection-start="300" selection-end="312" vertical-scroll-proportion="-2.7857144">
           <folding />
         </state>
       </provider>
@@ -639,9 +634,18 @@
         <state />
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbGrailsDomainClass.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="224" column="29" selection-start="8424" selection-end="8431" vertical-scroll-proportion="-14.769231">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/groovy/com/clearboxmedia/couchdb/CouchdbPluginSupport.groovy">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="63" column="21" selection-start="2719" selection-end="2719" vertical-scroll-proportion="0.6363636">
+        <state line="77" column="52" selection-start="3033" selection-end="3033" vertical-scroll-proportion="0.8424242">
           <folding />
         </state>
       </provider>
