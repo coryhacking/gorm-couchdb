@@ -74,7 +74,7 @@ public class CouchdbPluginSupport {
             document["_id"] = delegate.id
         }
         document["type"] = delegate.type
-        dc.getProperties().each() {prop ->
+        dc.getPersistantProperties().each() {prop ->
             println "name is ${prop.name}, value is " + delegate."${prop.name}"
             document["${prop.name}"] = delegate."${prop.name}"
         }

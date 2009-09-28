@@ -71,7 +71,7 @@
       <file leaf-file-name="CouchdbPluginSupport.groovy" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/groovy/com/clearboxmedia/couchdb/CouchdbPluginSupport.groovy">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="77" column="52" selection-start="3033" selection-end="3033" vertical-scroll-proportion="0.8424242">
+            <state line="18" column="49" selection-start="571" selection-end="588" vertical-scroll-proportion="0.12727273">
               <folding />
             </state>
           </provider>
@@ -98,7 +98,7 @@
       <file leaf-file-name="CouchdbGrailsDomainClass.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbGrailsDomainClass.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="224" column="29" selection-start="8424" selection-end="8431" vertical-scroll-proportion="-14.769231">
+            <state line="76" column="128" selection-start="3953" selection-end="3953" vertical-scroll-proportion="-22.76923">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -636,7 +636,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/java/com/clearboxmedia/couchdb/domain/CouchdbGrailsDomainClass.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="224" column="29" selection-start="8424" selection-end="8431" vertical-scroll-proportion="-14.769231">
+        <state line="76" column="128" selection-start="3953" selection-end="3953" vertical-scroll-proportion="-22.76923">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -645,7 +645,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/groovy/com/clearboxmedia/couchdb/CouchdbPluginSupport.groovy">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="77" column="52" selection-start="3033" selection-end="3033" vertical-scroll-proportion="0.8424242">
+        <state line="18" column="49" selection-start="571" selection-end="588" vertical-scroll-proportion="0.12727273">
           <folding />
         </state>
       </provider>

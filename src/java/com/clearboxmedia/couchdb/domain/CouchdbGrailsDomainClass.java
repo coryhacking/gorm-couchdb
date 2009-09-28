@@ -72,8 +72,9 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
                 this.type = property;
             } else {
                 propertyMap.put(descriptor.getName(), property);
-                System.out.println("property is : " + descriptor.getName() + ", persistence is " + property.isPersistent());
                 if (property.isPersistent()) {
+
+                    System.out.println("property is : " + descriptor.getName() + ", persistence is " + property.isPersistent());
                     persistentProperties.put(descriptor.getName(), property);
                 }
             }
@@ -211,6 +212,14 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
             } catch (NoSuchFieldException e) {
                 // ignore
             }
+            this.persistent = checkPersistence(descriptor);
+        }
+
+        private boolean checkPersistence(PropertyDescriptor descriptor) {
+            if (descriptor.getName().equals("class") || descriptor.getName().equals("metaClass")) {
+                return false;
+            }
+            return true;
         }
 
         public <T extends java.lang.annotation.Annotation> T getAnnotation(Class<T> annotation) {
@@ -255,7 +264,9 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public boolean isPersistent() {
+
             return persistent;
+
         }
 
         public boolean isOptional() {
