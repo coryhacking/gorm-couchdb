@@ -216,7 +216,8 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         private boolean checkPersistence(PropertyDescriptor descriptor) {
-            if (descriptor.getName().equals("class") || descriptor.getName().equals("metaClass")) {
+            if (descriptor.getName().equals("class") ||
+                    descriptor.getName().equals("metaClass") || descriptor.getName().equals("version")) {
                 return false;
             }
             return true;

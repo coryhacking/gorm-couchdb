@@ -15,8 +15,8 @@ public class CouchdbPluginSupport {
 
 
     static doWithApplicationContext = {ApplicationContext applicationContext ->
-        //temporary
-        Database db = new Database("localhost", "gorm-couchdb-test")
+        def ds = application.config.couchdb
+        Database db = new Database(ds.host, ds.port, ds.database)
         for (dc in application.domainClasses) {
             def clazz = dc.clazz
             if (clazz.isAnnotationPresent(CouchDBEntity)) {
@@ -43,11 +43,12 @@ public class CouchdbPluginSupport {
                                 //for now have couch create our id for this object, do want to customize this later though
                                 if (delegate.id != null && delegate.id != "") {
                                     Map document = CouchdbPluginSupport.createDocumentMap(couchDomainClass, delegate, false)
-                                    db.createDocument(document)
+                                    db.updateDocument(document)
                                 } else {
                                     Map document = CouchdbPluginSupport.createDocumentMap(couchDomainClass, delegate, true)
-                                    def id = db.createDocument(document)
-                                    delegate.id = id
+                                    db.createDocument(document)
+                                    delegate.id = document._id
+                                    delegate.rev = document._rev
                                 }
 
                                 return delegate
@@ -69,9 +70,9 @@ public class CouchdbPluginSupport {
         println "calling createDocumentMap"
         Map document = [:]
         if (newDocument) {
-            document["id"] = delegate.id
+            document["_id"] = delegate.type + "_" + delegate.name
         } else {
-            document["_id"] = delegate.id
+            document["id"] = delegate.id
         }
         document["type"] = delegate.type
         dc.getPersistantProperties().each() {prop ->
