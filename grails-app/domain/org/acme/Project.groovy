@@ -10,7 +10,7 @@ class Project {
 
     @CouchDBId
     String id
-    
+
     @CouchDBRev
     String rev
 
@@ -18,13 +18,15 @@ class Project {
     static String type = 'project'
 
     String name
-    String startDate
+    Date startDate
+    Date lastUpdated
     String frequency
+
     static constraints = {
-        name blank:false
-        id nullable:true
-        rev nullable:true
-        startDate nullable:true
-        frequency nullable:true
+        name blank: false
+        id nullable: true
+        rev nullable: true
+        startDate nullable: true
+        frequency nullable: true
     }
 }

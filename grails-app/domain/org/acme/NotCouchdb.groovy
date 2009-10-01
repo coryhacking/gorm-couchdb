@@ -1,6 +1,7 @@
 package org.acme
 
 class NotCouchdb {
+
     Long id
 
     String name

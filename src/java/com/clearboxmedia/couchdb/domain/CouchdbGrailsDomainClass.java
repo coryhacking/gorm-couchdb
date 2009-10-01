@@ -1,32 +1,35 @@
 package com.clearboxmedia.couchdb.domain;
 
-import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty;
-import org.codehaus.groovy.grails.commons.GrailsDomainClass;
-import org.codehaus.groovy.grails.commons.AbstractGrailsClass;
-import org.codehaus.groovy.grails.exceptions.GrailsDomainException;
-import org.codehaus.groovy.grails.validation.metaclass.ConstraintsEvaluatingDynamicProperty;
-import org.codehaus.groovy.grails.validation.ConstrainedProperty;
-import org.springframework.validation.Validator;
-import org.springframework.beans.BeanUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
-
-import grails.util.GrailsNameUtils;
-
-import java.util.*;
-import java.beans.PropertyDescriptor;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-import java.lang.reflect.ParameterizedType;
-
 import com.clearboxmedia.couchdb.CouchDBEntity;
 import com.clearboxmedia.couchdb.CouchDBId;
 import com.clearboxmedia.couchdb.CouchDBRev;
 import com.clearboxmedia.couchdb.CouchDBType;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.codehaus.groovy.grails.commons.AbstractGrailsClass;
+import org.codehaus.groovy.grails.commons.GrailsDomainClass;
+import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty;
+import org.codehaus.groovy.grails.exceptions.GrailsDomainException;
+import org.codehaus.groovy.grails.validation.ConstrainedProperty;
+import org.codehaus.groovy.grails.validation.metaclass.ConstraintsEvaluatingDynamicProperty;
+import org.springframework.beans.BeanUtils;
+import org.springframework.validation.Validator;
+
+import grails.util.GrailsNameUtils;
+
+import java.beans.PropertyDescriptor;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements GrailsDomainClass {
+
     private Map<String, GrailsDomainClassProperty> propertyMap = new HashMap<String, GrailsDomainClassProperty>();
     private Map<String, GrailsDomainClassProperty> persistentProperties = new HashMap<String, GrailsDomainClassProperty>();
     private GrailsDomainClassProperty[] propertiesArray;
@@ -189,6 +192,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     }
 
     private class CouchdbDomainClassProperty implements GrailsDomainClassProperty {
+
         private Class ownerClass;
         private PropertyDescriptor descriptor;
         private Field propertyField;
@@ -216,15 +220,16 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         private boolean checkPersistence(PropertyDescriptor descriptor) {
-            if (descriptor.getName().equals("class") ||
-                    descriptor.getName().equals("metaClass") || descriptor.getName().equals("version")) {
+            if (descriptor.getName().equals("class") || descriptor.getName().equals("metaClass") || descriptor.getName().equals("version")) {
                 return false;
             }
             return true;
         }
 
         public <T extends java.lang.annotation.Annotation> T getAnnotation(Class<T> annotation) {
-            if (field == null) return null;
+            if (field == null) {
+                return null;
+            }
             return this.field.getAnnotation(annotation);
         }
 
@@ -245,8 +250,9 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
                 final Type genericType = field.getGenericType();
                 if (genericType instanceof ParameterizedType) {
                     final Type[] arguments = ((ParameterizedType) genericType).getActualTypeArguments();
-                    if (arguments.length > 0)
+                    if (arguments.length > 0) {
                         return (Class) arguments[0];
+                    }
                 }
             }
             return getType();
@@ -360,7 +366,9 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public boolean isAnnotatedWith(Class annotation) {
-            if (field == null) return false;
+            if (field == null) {
+                return false;
+            }
             return field.getAnnotation(annotation) != null;
         }
 
@@ -377,15 +385,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
             } else if (isEmbedded()) {
                 assType = "embedded";
             }
-            return new ToStringBuilder(this)
-                    .append("name", this.name)
-                    .append("type", this.type)
-                    .append("persistent", isPersistent())
-                    .append("optional", isOptional())
-                    .append("association", isAssociation())
-                    .append("bidirectional", isBidirectional())
-                    .append("association-type", assType)
-                    .toString();
+            return new ToStringBuilder(this).append("name", this.name).append("type", this.type).append("persistent", isPersistent()).append("optional", isOptional()).append("association", isAssociation()).append("bidirectional", isBidirectional()).append("association-type", assType).toString();
         }
     }
 }
