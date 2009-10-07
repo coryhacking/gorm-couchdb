@@ -1,5 +1,6 @@
 package com.clearboxmedia.couchdb.domain;
 
+import com.clearboxmedia.couchdb.CouchDBAttachments;
 import com.clearboxmedia.couchdb.CouchDBEntity;
 import com.clearboxmedia.couchdb.CouchDBId;
 import com.clearboxmedia.couchdb.CouchDBRev;
@@ -35,6 +36,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     private GrailsDomainClassProperty[] propertiesArray;
     private CouchdbDomainClassProperty identifier;
     private CouchdbDomainClassProperty version;
+    private CouchdbDomainClassProperty attachments;
     private CouchdbDomainClassProperty type;
     private Validator validator;
     private GrailsDomainClassProperty[] persistentPropertyArray;
@@ -65,19 +67,16 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
             final CouchdbDomainClassProperty property = new CouchdbDomainClassProperty(this, descriptor);
 
             if (property.isAnnotatedWith(CouchDBId.class)) {
-                System.out.println("id property is : " + descriptor.getName());
                 this.identifier = property;
             } else if (property.isAnnotatedWith(CouchDBRev.class)) {
-                System.out.println("version property is : " + descriptor.getName());
                 this.version = property;
+            } else if (property.isAnnotatedWith(CouchDBAttachments.class)) {
+                this.attachments = property;
             } else if (property.isAnnotatedWith(CouchDBType.class)) {
-                System.out.println("type property is : " + descriptor.getName());
                 this.type = property;
             } else {
                 propertyMap.put(descriptor.getName(), property);
                 if (property.isPersistent()) {
-
-                    System.out.println("property is : " + descriptor.getName() + ", persistence is " + property.isPersistent());
                     persistentProperties.put(descriptor.getName(), property);
                 }
             }
@@ -108,6 +107,10 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
 
     public GrailsDomainClassProperty getVersion() {
         return this.version;
+    }
+
+    public GrailsDomainClassProperty getAttachments() {
+        return this.attachments;
     }
 
     public GrailsDomainClassProperty getType() {

@@ -5,26 +5,28 @@ import com.clearboxmedia.couchdb.CouchDBId
 import com.clearboxmedia.couchdb.CouchDBRev
 
 @CouchDBEntity
-class Project {
+class Task {
 
     @CouchDBId
-    String id
+    String taskId
 
     @CouchDBRev
-    String version
+    String taskVersion
 
-    final String type = 'project'
+    final String type = 'task'
 
+    String projectId
     String name
+
     Date startDate
-    Date lastUpdated
-    String frequency
+    Date completionDate
+    Integer estimatedHours
+    Integer actualHours
+
+    String description
 
     static constraints = {
-        id nullable: true
-        version nullable: true
+        projectId blank: false
         name blank: false
-        startDate nullable: true
-        frequency nullable: true
     }
 }

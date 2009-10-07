@@ -13,7 +13,7 @@ import org.svenson.util.Util
 
 class CouchDocument implements Document, JSONable {
 
-    private static JsonConfig jsonConfig = new CouchJsonConfig()
+    private static final JsonConfig COUCH_JSON_CONFIG = new CouchJsonConfig()
 
     String id;
     String revision;
@@ -74,10 +74,10 @@ class CouchDocument implements Document, JSONable {
         }
 
         // set our remaining attributes
-        json.accumulateAll attrs, jsonConfig
+        json.accumulateAll attrs, COUCH_JSON_CONFIG
 
         // return the json string
-        return JSONSerializer.toJSON(json, jsonConfig).toString()
+        return JSONSerializer.toJSON(json, COUCH_JSON_CONFIG).toString()
     }
 
     @Override

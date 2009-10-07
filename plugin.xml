@@ -10,6 +10,7 @@ A plugin that emulates the behavior of the GORM-Hibernate plugin against a Couch
     <resource>UrlMappings</resource>
     <resource>org.acme.NotCouchdb</resource>
     <resource>org.acme.Project</resource>
+    <resource>org.acme.Task</resource>
   </resources>
   <dependencies>
     <plugin name='core' version='1.1 &gt; *' />

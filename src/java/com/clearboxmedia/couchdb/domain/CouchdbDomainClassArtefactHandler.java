@@ -1,11 +1,11 @@
 package com.clearboxmedia.couchdb.domain;
 
+import com.clearboxmedia.couchdb.CouchDBEntity;
 import org.codehaus.groovy.grails.commons.ArtefactHandlerAdapter;
 import org.codehaus.groovy.grails.commons.GrailsDomainClass;
-import com.clearboxmedia.couchdb.CouchDBEntity;
-
 
 public class CouchdbDomainClassArtefactHandler extends ArtefactHandlerAdapter {
+
     public static final String TYPE = "Domain";
 
     public CouchdbDomainClassArtefactHandler() {
