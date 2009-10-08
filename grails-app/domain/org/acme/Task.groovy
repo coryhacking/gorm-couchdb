@@ -4,7 +4,7 @@ import com.clearboxmedia.couchdb.CouchDBEntity
 import com.clearboxmedia.couchdb.CouchDBId
 import com.clearboxmedia.couchdb.CouchDBRev
 
-@CouchDBEntity
+@CouchDBEntity(type = "project-task")
 class Task {
 
     @CouchDBId
@@ -12,8 +12,6 @@ class Task {
 
     @CouchDBRev
     String taskVersion
-
-    final String type = 'task'
 
     String projectId
     String name

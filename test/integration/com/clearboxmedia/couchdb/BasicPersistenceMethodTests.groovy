@@ -58,6 +58,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         p.save()
 
         assertNotNull "should have saved a project", p
+        assertEquals "should have saved project with id = '${id}'", p.id, id
 
         p.delete()
     }

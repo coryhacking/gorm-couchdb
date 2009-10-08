@@ -4,7 +4,6 @@ import com.clearboxmedia.couchdb.CouchDBAttachments;
 import com.clearboxmedia.couchdb.CouchDBEntity;
 import com.clearboxmedia.couchdb.CouchDBId;
 import com.clearboxmedia.couchdb.CouchDBRev;
-import com.clearboxmedia.couchdb.CouchDBType;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.codehaus.groovy.grails.commons.AbstractGrailsClass;
 import org.codehaus.groovy.grails.commons.GrailsDomainClass;
@@ -18,7 +17,7 @@ import org.springframework.validation.Validator;
 import grails.util.GrailsNameUtils;
 
 import java.beans.PropertyDescriptor;
-import java.lang.annotation.Annotation;
+import java.lang.annotation.IncompleteAnnotationException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -37,22 +36,38 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     private CouchdbDomainClassProperty identifier;
     private CouchdbDomainClassProperty version;
     private CouchdbDomainClassProperty attachments;
-    private CouchdbDomainClassProperty type;
+    private String type;
     private Validator validator;
     private GrailsDomainClassProperty[] persistentPropertyArray;
     private Map constrainedProperties = Collections.EMPTY_MAP;
 
     public CouchdbGrailsDomainClass(Class clazz) {
         super(clazz, "");
-        Annotation entityAnnotation = clazz.getAnnotation(CouchDBEntity.class);
+
+        CouchDBEntity entityAnnotation = (CouchDBEntity) clazz.getAnnotation(CouchDBEntity.class);
         if (entityAnnotation == null) {
             throw new GrailsDomainException("Class [" + clazz.getName() + "] is not annotated with com.clearboxmedia.couchdb.CouchDBEntity!");
         }
+
         PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(clazz);
         evaluateClassProperties(descriptors);
         evaluateConstraints();
         propertiesArray = propertyMap.values().toArray(new GrailsDomainClassProperty[propertyMap.size()]);
         persistentPropertyArray = persistentProperties.values().toArray(new GrailsDomainClassProperty[persistentProperties.size()]);
+
+        // try to read the "type" annotation property
+        try {
+            type = entityAnnotation.type();
+
+            // if the type annotation is empty, then disable type handling
+            if ("".equals(type)) {
+                type = null;
+            }
+        } catch (IncompleteAnnotationException ex) {
+
+            // if the type wasn't set, then use the domain class name
+            type = clazz.getSimpleName().toLowerCase();
+        }
     }
 
     private void evaluateConstraints() {
@@ -72,8 +87,6 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
                 this.version = property;
             } else if (property.isAnnotatedWith(CouchDBAttachments.class)) {
                 this.attachments = property;
-            } else if (property.isAnnotatedWith(CouchDBType.class)) {
-                this.type = property;
             } else {
                 propertyMap.put(descriptor.getName(), property);
                 if (property.isPersistent()) {
@@ -113,7 +126,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         return this.attachments;
     }
 
-    public GrailsDomainClassProperty getType() {
+    public String getType() {
         return this.type;
     }
 
@@ -373,6 +386,10 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
                 return false;
             }
             return field.getAnnotation(annotation) != null;
+        }
+
+        public boolean isHasOne() {
+            return false;
         }
 
         public String toString() {

@@ -11,7 +11,6 @@ import org.codehaus.groovy.grails.commons.GrailsDomainClass
 import org.jcouchdb.db.Database
 import org.jcouchdb.db.Options
 import org.jcouchdb.document.Attachment
-import org.jcouchdb.document.ViewResult
 import org.jcouchdb.exception.NotFoundException
 
 public class CouchdbPluginSupport {
@@ -228,10 +227,22 @@ public class CouchdbPluginSupport {
         CouchDocument doc = new CouchDocument()
 
         if (cdc) {
+
+            // set the document type if it is enabled set it first, so that it can be
+            //  overridden by an actual type property if there is one...
+            if (cdc.type) {
+                doc["type"] = cdc.type
+            }
+
+            // set all of the persistant properties.
             cdc.getPersistantProperties().each() {prop ->
                 doc[prop.name] = domain[prop.name]
             }
 
+            // set the document id, revision, and attachments... do it last so that the
+            //  annotated properties override any other ones that may be there.  Especially
+            //  needed if hibernate is already enabled as id and version fields are created,
+            //  but may not be used.
             doc.id = getDocumentId(cdc, domain)
             doc.revision = getDocumentVersion(cdc, domain)
             doc.attachments = getDocumentAttachments(cdc, domain)

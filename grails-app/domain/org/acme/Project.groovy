@@ -13,8 +13,6 @@ class Project {
     @CouchDBRev
     String version
 
-    final String type = 'project'
-
     String name
     Date startDate
     Date lastUpdated
