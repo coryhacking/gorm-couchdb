@@ -28,7 +28,7 @@ public class CouchdbPluginSupport {
         application.domainClasses.each {GrailsDomainClass dc ->
             def clazz = dc.clazz
 
-            if (clazz.isAnnotationPresent(CouchDBEntity)) {
+            if (clazz.isAnnotationPresent(CouchEntity)) {
                 MetaClass mc = clazz.getMetaClass()
 
                 CouchdbGrailsDomainClass cdc = new CouchdbGrailsDomainClass(clazz)

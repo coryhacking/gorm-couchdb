@@ -1,9 +1,9 @@
 package com.clearboxmedia.couchdb.domain;
 
-import com.clearboxmedia.couchdb.CouchDBAttachments;
-import com.clearboxmedia.couchdb.CouchDBEntity;
-import com.clearboxmedia.couchdb.CouchDBId;
-import com.clearboxmedia.couchdb.CouchDBRev;
+import com.clearboxmedia.couchdb.CouchAttachments;
+import com.clearboxmedia.couchdb.CouchEntity;
+import com.clearboxmedia.couchdb.CouchId;
+import com.clearboxmedia.couchdb.CouchRev;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.codehaus.groovy.grails.commons.AbstractGrailsClass;
 import org.codehaus.groovy.grails.commons.GrailsDomainClass;
@@ -44,9 +44,9 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     public CouchdbGrailsDomainClass(Class clazz) {
         super(clazz, "");
 
-        CouchDBEntity entityAnnotation = (CouchDBEntity) clazz.getAnnotation(CouchDBEntity.class);
+        CouchEntity entityAnnotation = (CouchEntity) clazz.getAnnotation(CouchEntity.class);
         if (entityAnnotation == null) {
-            throw new GrailsDomainException("Class [" + clazz.getName() + "] is not annotated with com.clearboxmedia.couchdb.CouchDBEntity!");
+            throw new GrailsDomainException("Class [" + clazz.getName() + "] is not annotated with com.clearboxmedia.couchdb.CouchEntity!");
         }
 
         PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(clazz);
@@ -81,11 +81,11 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
 
             final CouchdbDomainClassProperty property = new CouchdbDomainClassProperty(this, descriptor);
 
-            if (property.isAnnotatedWith(CouchDBId.class)) {
+            if (property.isAnnotatedWith(CouchId.class)) {
                 this.identifier = property;
-            } else if (property.isAnnotatedWith(CouchDBRev.class)) {
+            } else if (property.isAnnotatedWith(CouchRev.class)) {
                 this.version = property;
-            } else if (property.isAnnotatedWith(CouchDBAttachments.class)) {
+            } else if (property.isAnnotatedWith(CouchAttachments.class)) {
                 this.attachments = property;
             } else {
                 propertyMap.put(descriptor.getName(), property);
@@ -298,7 +298,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public boolean isIdentity() {
-            return isAnnotatedWith(CouchDBId.class);
+            return isAnnotatedWith(CouchId.class);
         }
 
         public boolean isOneToMany() {

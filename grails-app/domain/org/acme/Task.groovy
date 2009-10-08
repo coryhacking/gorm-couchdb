@@ -1,16 +1,16 @@
 package org.acme
 
-import com.clearboxmedia.couchdb.CouchDBEntity
-import com.clearboxmedia.couchdb.CouchDBId
-import com.clearboxmedia.couchdb.CouchDBRev
+import com.clearboxmedia.couchdb.CouchEntity
+import com.clearboxmedia.couchdb.CouchId
+import com.clearboxmedia.couchdb.CouchRev
 
-@CouchDBEntity(type = "project-task")
+@CouchEntity(type = "project-task")
 class Task {
 
-    @CouchDBId
+    @CouchId
     String taskId
 
-    @CouchDBRev
+    @CouchRev
     String taskVersion
 
     String projectId

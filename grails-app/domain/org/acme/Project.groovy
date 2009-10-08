@@ -1,16 +1,16 @@
 package org.acme
 
-import com.clearboxmedia.couchdb.CouchDBEntity
-import com.clearboxmedia.couchdb.CouchDBId
-import com.clearboxmedia.couchdb.CouchDBRev
+import com.clearboxmedia.couchdb.CouchEntity
+import com.clearboxmedia.couchdb.CouchId
+import com.clearboxmedia.couchdb.CouchRev
 
-@CouchDBEntity
+@CouchEntity
 class Project {
 
-    @CouchDBId
+    @CouchId
     String id
 
-    @CouchDBRev
+    @CouchRev
     String version
 
     String name
