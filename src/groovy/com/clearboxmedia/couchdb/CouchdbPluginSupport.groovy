@@ -11,6 +11,7 @@ import org.codehaus.groovy.grails.commons.GrailsDomainClass
 import org.jcouchdb.db.Database
 import org.jcouchdb.db.Options
 import org.jcouchdb.document.Attachment
+import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.exception.NotFoundException
 
 public class CouchdbPluginSupport {
@@ -29,167 +30,181 @@ public class CouchdbPluginSupport {
             def clazz = dc.clazz
 
             if (clazz.isAnnotationPresent(CouchEntity)) {
-                MetaClass mc = clazz.getMetaClass()
-
                 CouchdbGrailsDomainClass cdc = new CouchdbGrailsDomainClass(clazz)
                 couchdbDomainClasses[dc.getFullName()] = cdc
 
                 application.addArtefact(CouchdbDomainClassArtefactHandler.TYPE, cdc)
 
-                clazz.metaClass {
+                MetaClass mc = clazz.getMetaClass()
 
-                    //
-                    // Static Methods
-                    //
-                    'static' {
+                //
+                // Class Methods
+                //
+                mc.save = {->
+                    save(null)
+                }
 
-                        get {Serializable docId ->
-                            try {
-                                def json = db.getDocument(JSONObject.class, docId.toString())
-                                def domain = convertToDomainObject(cdc, json)
+                mc.save = {Map args = [:] ->
 
-                                return domain
+                    if (delegate.validate()) {
 
-                            } catch (NotFoundException e) {
-                                // fall through to return null
-                            }
+                        // create our couch document that can be serialized to json properly
+                        CouchDocument doc = convertToCouchDocument(delegate)
 
-                            return null
+                        // save the document
+                        db.createOrUpdateDocument doc
+
+                        // set the return id and revision on the domain object
+                        def id = cdc.getIdentifier()
+                        if (id) {
+                            delegate[id.name] = doc.id
                         }
 
-                        // Foo.exists(1)
-                        exists {Serializable docId ->
-                            get(docId) != null
+                        def rev = cdc.getVersion()
+                        if (rev) {
+                            delegate[rev.name] = doc.revision
                         }
 
-                        delete {Serializable docId, String version ->
-                            db.delete docId.toString(), version
-                        }
-
-                        bulkSave {List documents ->
-                            return db.bulkCreateDocuments(documents, false)
-                        }
-
-                        bulkSave {List documents, Boolean allOrNothing ->
-                            def couchDocuments = new ArrayList()
-
-                            documents.each {doc ->
-                                couchDocuments << convertToCouchDocument(doc)
-
-                            }
-
-                            return db.bulkCreateDocuments(couchDocuments, allOrNothing)
-                        }
-
-                        bulkDelete {List documents ->
-                            return db.bulkDeleteDocuments(documents, false)
-                        }
-
-                        bulkDelete {List documents, boolean allOrNothing ->
-                            def couchDocuments = new ArrayList()
-
-                            documents.each {doc ->
-                                couchDocuments << convertToCouchDocument(doc)
-
-                            }
-
-                            return db.bulkDeleteDocuments(couchDocuments, allOrNothing)
-                        }
-
-                        createAttachment {Serializable docId, String version, String attachmentId, String contentType, byte[] data ->
-                            return db.createAttachment(docId.toString(), version, attachmentId, contentType, data)
-                        }
-
-                        updateAttachment {Serializable docId, String version, String attachmentId, String contentType, byte[] data ->
-                            return db.updateAttachment(docId.toString(), version, attachmentId, contentType, data)
-                        }
-
-                        createAttachment {Serializable docId, String version, String attachmentId, String contentType, InputStream is, long length ->
-                            return db.createAttachment(docId.toString(), version, attachmentId, contentType, is, length)
-                        }
-
-                        updateAttachment {Serializable docId, String version, String attachmentId, String contentType, InputStream is, long length ->
-                            return db.updateAttachment(docId.toString(), version, attachmentId, contentType, is, length)
-                        }
-
-                        deleteAttachment {Serializable docId, String version, String attachmentId ->
-                            return db.deleteAttachment(docId.toString(), version, attachmentId)
-                        }
-
-                        getAttachment {Serializable docId, String attachmentId ->
-                            return db.getAttachment(docId.toString(), attachmentId)
-                        }
-
-                        list {Map o = [:] ->
-                            return db.listDocuments(getOptions(o), null).getRows()
-                        }
-
-                        listByUpdateSequence {Map o = [:] ->
-                            return db.listDocumentsByUpdateSequence(getOptions(o), null).getRows()
-                        }
+                        return delegate
                     }
 
-                    //
-                    // Class Methods
-                    //
-                    save {->
-                        save(null)
+                    return null
+                }
+
+                mc.delete = {->
+                    db.delete getDocumentId(cdc, delegate), getDocumentVersion(cdc, delegate)
+                }
+
+                mc.getAttachment = {Serializable attachmentId ->
+                    return db.getAttachment(getDocumentId(cdc, delegate), attachmentId.toString())
+                }
+
+                mc.saveAttachment = {Serializable attachmentId, String contentType, byte[] data ->
+                    return db.createAttachment(getDocumentId(cdc, delegate), getDocumentVersion(cdc, delegate), attachmentId.toString(), contentType, data)
+                }
+
+                mc.saveAttachment = {Serializable attachmentId, String contentType, InputStream is, long length ->
+                    return db.createAttachment(getDocumentId(cdc, delegate), getDocumentVersion(cdc, delegate), attachmentId.toString(), contentType, is, length)
+                }
+
+                mc.deleteAttachment = {Serializable attachmentId ->
+                    return db.deleteAttachment(getDocumentId(cdc, delegate), getDocumentVersion(cdc, delegate), attachmentId.toString())
+                }
+
+                //
+                // Static Methods
+                //
+                mc.'static'.get = {Serializable docId ->
+                    try {
+                        def json = db.getDocument(JSONObject.class, docId.toString())
+                        def domain = convertToDomainObject(cdc, json)
+
+                        return domain
+
+                    } catch (NotFoundException e) {
+                        // fall through to return null
                     }
 
-                    save {Map args = [:] ->
+                    return null
+                }
 
-                        if (delegate.validate()) {
+                // Foo.exists(1)
+                mc.'static'.exists = {Serializable docId ->
+                    get(docId) != null
+                }
 
-                            // create our couch document that can be serialized to json properly
-                            CouchDocument doc = convertToCouchDocument(delegate)
+                mc.'static'.delete = {Serializable docId, String version ->
+                    db.delete docId.toString(), version
+                }
 
-                            // save the document
-                            db.createOrUpdateDocument doc
+                mc.'static'.bulkSave = {List documents ->
+                    return bulkSave(documents, false)
+                }
 
-                            // set the return id and revision on the domain object
-                            def id = cdc.getIdentifier()
-                            if (id) {
-                                delegate[id.name] = doc.id
-                            }
+                mc.'static'.bulkSave = {List documents, Boolean allOrNothing ->
+                    def couchDocuments = new ArrayList()
 
-                            def rev = cdc.getVersion()
-                            if (rev) {
-                                delegate[rev.name] = doc.revision
-                            }
+                    documents.each {doc ->
+                        couchDocuments << convertToCouchDocument(doc)
 
-                            return delegate
-                        }
-
-                        return null
                     }
 
-                    delete {->
-                        db.delete getDocumentId(cdc, delegate), getDocumentVersion(cdc, delegate)
+                    return db.bulkCreateDocuments(couchDocuments, allOrNothing)
+                }
+
+                mc.'static'.bulkDelete = {List documents ->
+                    return bulkDelete(documents, false)
+                }
+
+                mc.'static'.bulkDelete = {List documents, boolean allOrNothing ->
+                    def couchDocuments = new ArrayList()
+
+                    documents.each {doc ->
+                        couchDocuments << convertToCouchDocument(doc)
+
                     }
 
-                    createAttachment {Serializable attachmentId, String contentType, byte[] data ->
-                        return db.createAttachment(getDocumentId(cdc, delegate), getDocumentVersion(cdc, delegate), attachmentId.toString(), contentType, data)
-                    }
+                    return db.bulkDeleteDocuments(couchDocuments, allOrNothing)
+                }
 
-                    updateAttachment {Serializable attachmentId, String contentType, byte[] data ->
-                        return db.updateAttachment(getDocumentId(cdc, delegate), getDocumentVersion(cdc, delegate), attachmentId.toString(), contentType, data)
-                    }
+                mc.'static'.getAttachment = {Serializable docId, String attachmentId ->
+                    return db.getAttachment(docId.toString(), attachmentId)
+                }
 
-                    createAttachment {Serializable attachmentId, String contentType, InputStream is, long length ->
-                        return db.createAttachment(getDocumentId(cdc, delegate), getDocumentVersion(cdc, delegate), attachmentId.toString(), contentType, is, length)
-                    }
+                mc.'static'.saveAttachment = {Serializable docId, String version, String attachmentId, String contentType, byte[] data ->
+                    return db.createAttachment(docId.toString(), version, attachmentId, contentType, data)
+                }
 
-                    updateAttachment {Serializable attachmentId, String contentType, InputStream is, long length ->
-                        return db.updateAttachment(getDocumentId(cdc, delegate), getDocumentVersion(cdc, delegate), attachmentId.toString(), contentType, is, length)
-                    }
+                mc.'static'.saveAttachment = {Serializable docId, String version, String attachmentId, String contentType, InputStream is, long length ->
+                    return db.createAttachment(docId.toString(), version, attachmentId, contentType, is, length)
+                }
 
-                    deleteAttachment {Serializable attachmentId ->
-                        return db.deleteAttachment(getDocumentId(cdc, delegate), getDocumentVersion(cdc, delegate), attachmentId.toString())
-                    }
+                mc.'static'.deleteAttachment = {Serializable docId, String version, String attachmentId ->
+                    return db.deleteAttachment(docId.toString(), version, attachmentId)
+                }
 
-                    getAttachment {Serializable attachmentId ->
-                        return db.getAttachment(getDocumentId(cdc, delegate), attachmentId.toString())
+                mc.'static'.findAll = {Map o = [:] ->
+                    return findAll(getOptions(o))
+                }
+
+                mc.'static'.findAll = {Options o ->
+                    return db.listDocuments(o, null).getRows()
+                }
+
+                mc.'static'.findAllByUpdateSequence = {Map o = [:] ->
+                    return findAllByUpdateSequence(getOptions(o))
+                }
+
+                mc.'static'.findAllByUpdateSequence = {Options o ->
+                    return db.listDocumentsByUpdateSequence(o, null).getRows()
+                }
+
+                mc.'static'.findByView = {String viewName, Map o = [:] ->
+                    return findByView(viewName, getOptions(o))
+                }
+
+                mc.'static'.findByView = {String viewName, Options o ->
+                    return db.queryView(viewName, Map.class, o, null).getRows()
+                }
+
+                mc.'static'.findByViewAndKeys = {String viewName, List keys, Map o = [:] ->
+                    return findByViewAndKeys(viewName, keys, getOptions(o));
+                }
+
+                mc.'static'.findByViewAndKeys = {String viewName, List keys, Options o ->
+                    return db.queryViewByKeys(viewName, Map.class, keys, o, null).getRows();
+                }
+
+                mc.'static'.getDesignDocument = {Serializable id ->
+                    try {
+                        return db.getDesignDocument(id.toString())
+                    } catch (NotFoundException e) {
+                        // fall through to return null
                     }
+                }
+
+                mc.'static'.saveDesignDocument = {DesignDocument doc ->
+                    return db.createDocument(doc)
                 }
             }
         }
@@ -278,6 +293,21 @@ public class CouchdbPluginSupport {
     }
 
     private static Options getOptions(Map o) {
-        return (o) ? new Options(o) : new Options()
+        def options = new Options()
+
+        if (o) {
+
+            // convert the map to options; some options need to be encoded, but the
+            //  Options(Map) constructor doesn't do it properly so we're doing it manually.
+            o.each {key, value ->
+                if (key == "key" || key == "startkey" || key == "endkey") {
+                    options.put(key, value)
+                } else {
+                    options.putUnencoded(key, value)
+                }
+            }
+        }
+
+        return options
     }
 }

@@ -2,11 +2,25 @@ package com.clearboxmedia.couchdb
 
 import org.acme.Project
 import org.acme.Task
+import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.document.DocumentInfo
+import org.jcouchdb.document.View
 
 public class BasicPersistenceMethodTests extends GroovyTestCase {
 
     static transactional = false
+
+    void testDesignDocument() {
+
+        def design = Task.getDesignDocument("tasks")
+        if (!design) {
+
+            design = new DesignDocument("tasks");
+            design.addView("open", new View("function(doc) { if (doc.type == 'project-task' && doc.completionDate == null) { emit(doc._id,{'startDate':doc.startDate}); }}"))
+
+            Task.saveDesignDocument(design)
+        }
+    }
 
     void testValidation() {
         def p = new Project(name: "")
@@ -50,6 +64,8 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             p.name = "Test Project"
 
             println "project ${p.id} is new."
+
+            p.save()
         } else {
             println "project ${p.id} revision ${p.version} was read."
         }
@@ -95,7 +111,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         }
 
         // bulk save all of the documents
-        List<DocumentInfo> result = Project.bulkSave(bulkDocuments, true)
+        List<DocumentInfo> result = Project.bulkSave(bulkDocuments)
 
         // verify that they all saved
         result.each {DocumentInfo info ->
@@ -103,17 +119,37 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         }
     }
 
-    void testList() {
+    void testFind() {
 
-        def result = Project.list()
+        def result = Project.findAll()
         result.each {info ->
-            print info
+            println info
         }
 
-        result = Project.listByUpdateSequence()
+        result = Project.findAllByUpdateSequence()
         result.each {info ->
-            print info
+            println info
         }
+
+        result = Project.findByView("tasks/open")
+        assertEquals "should have found 20 open tasks", result.size(), 20
+        result.each {info ->
+            println info
+        }
+
+        result = Project.findByView("tasks/open", ['startkey': "gorm-couchdb-task-1", 'endkey': "gorm-couchdb-task-10"])
+        assertEquals "should have found 2 open tasks", result.size(), 2
+        result.each {info ->
+            println info
+        }
+
+        result = Project.findByViewAndKeys("tasks/open", ["gorm-couchdb-task-15"])
+        assertEquals "should have found 1 open task", result.size(), 1
+        result.each {info ->
+            println info
+            assertEquals "should have found task #15", info.id, "gorm-couchdb-task-15"
+        }
+
     }
 
     void testBulkDelete() {
@@ -135,7 +171,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         }
 
         // do our bulk delete.
-        List<DocumentInfo> result = Project.bulkDelete(bulkDocuments, true)
+        List<DocumentInfo> result = Project.bulkDelete(bulkDocuments)
 
         result.each {DocumentInfo info ->
             assertNull "Document ${info.id} should have been bulk-deleted successfully", info.error

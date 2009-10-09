@@ -76,7 +76,6 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     }
 
     private void evaluateClassProperties(PropertyDescriptor[] descriptors) {
-        System.out.println("[evaluateClassProperties] called");
         for (PropertyDescriptor descriptor : descriptors) {
 
             final CouchdbDomainClassProperty property = new CouchdbDomainClassProperty(this, descriptor);
@@ -388,6 +387,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
             return field.getAnnotation(annotation) != null;
         }
 
+        // grails 1.2 GrailsDomainClass
         public boolean isHasOne() {
             return false;
         }
