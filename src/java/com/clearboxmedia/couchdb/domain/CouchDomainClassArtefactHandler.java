@@ -20,22 +20,21 @@ import org.codehaus.groovy.grails.commons.ArtefactHandlerAdapter;
 import org.codehaus.groovy.grails.commons.GrailsDomainClass;
 
 /**
- * 
  * @author Warner Onstine, Cory Hacking
  */
-public class CouchdbDomainClassArtefactHandler extends ArtefactHandlerAdapter {
+public class CouchDomainClassArtefactHandler extends ArtefactHandlerAdapter {
 
-    public static final String TYPE = "Domain";
+    public static final String TYPE = "CouchDomain";
 
-    public CouchdbDomainClassArtefactHandler() {
-        super(TYPE, GrailsDomainClass.class, CouchdbGrailsDomainClass.class, null);
+    public CouchDomainClassArtefactHandler() {
+        super(TYPE, GrailsDomainClass.class, CouchDomainClass.class, null);
     }
 
     public boolean isArtefactClass(Class clazz) {
         return isCouchDBDomainClass(clazz);
     }
 
-    public static boolean isCouchDBDomainClass(Class clazz){
+    public static boolean isCouchDBDomainClass(Class clazz) {
         return clazz != null && clazz.getAnnotation(CouchEntity.class) != null;
     }
 }

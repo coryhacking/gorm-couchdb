@@ -44,10 +44,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
  * @author Warner Onstine, Cory Hacking
  */
-public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements GrailsDomainClass {
+public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomainClass {
 
     private Map<String, GrailsDomainClassProperty> propertyMap = new HashMap<String, GrailsDomainClassProperty>();
     private Map<String, GrailsDomainClassProperty> persistentProperties = new HashMap<String, GrailsDomainClassProperty>();
@@ -60,7 +59,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     private GrailsDomainClassProperty[] persistentPropertyArray;
     private Map constrainedProperties = Collections.EMPTY_MAP;
 
-    public CouchdbGrailsDomainClass(Class clazz) {
+    public CouchDomainClass(Class clazz) {
         super(clazz, "");
 
         CouchEntity entityAnnotation = (CouchEntity) clazz.getAnnotation(CouchEntity.class);
@@ -117,7 +116,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     }
 
     public boolean isOwningClass(Class domainClass) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return false;
     }
 
     public GrailsDomainClassProperty[] getProperties() {
@@ -172,7 +171,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
     }
 
     public boolean isBidirectional(String propertyName) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return false;
     }
 
     public Class getRelatedClassType(String propertyName) {
@@ -268,7 +267,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public int getFetchMode() {
-            return FETCH_LAZY;
+            return FETCH_EAGER;
         }
 
         public String getName() {
@@ -293,7 +292,7 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public GrailsDomainClassProperty getOtherSide() {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
+            return null;
         }
 
         public String getTypePropertyName() {
@@ -320,19 +319,19 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public boolean isOneToMany() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public boolean isManyToOne() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public boolean isManyToMany() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public boolean isBidirectional() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public String getFieldName() {
@@ -340,19 +339,19 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public boolean isOneToOne() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public GrailsDomainClass getReferencedDomainClass() {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
+            return null;
         }
 
         public boolean isAssociation() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public boolean isEnum() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public String getNaturalName() {
@@ -360,19 +359,19 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public void setReferencedDomainClass(GrailsDomainClass referencedGrailsDomainClass) {
-            //To change body of implemented methods use File | Settings | File Templates.
+
         }
 
         public void setOtherSide(GrailsDomainClassProperty referencedProperty) {
-            //To change body of implemented methods use File | Settings | File Templates.
+
         }
 
         public boolean isInherited() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public boolean isOwningSide() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public boolean isCircular() {
@@ -380,23 +379,23 @@ public class CouchdbGrailsDomainClass extends AbstractGrailsClass implements Gra
         }
 
         public String getReferencedPropertyName() {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
+            return null;
         }
 
         public boolean isEmbedded() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public GrailsDomainClass getComponent() {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
+            return null;
         }
 
         public void setOwningSide(boolean b) {
-            //To change body of implemented methods use File | Settings | File Templates.
+
         }
 
         public boolean isBasicCollectionType() {
-            return false;  //To change body of implemented methods use File | Settings | File Templates.
+            return false;
         }
 
         public boolean isAnnotatedWith(Class annotation) {

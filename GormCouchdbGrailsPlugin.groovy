@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import com.clearboxmedia.couchdb.*
+import com.clearboxmedia.couchdb.domain.CouchDomainClassArtefactHandler
 
 /**
  *
@@ -28,8 +30,10 @@ class GormCouchdbGrailsPlugin {
     def grailsVersion = "1.1 > *"
 
     // the other plugins this plugin depends on
-    def dependsOn = [core : '1.1 > *',
-                     domainClass : '1.0 > *']
+    def dependsOn = [core: '1.1 > *']
+
+    def loadAfter = ['core']
+    def loadBefore = ['hibernate']
 
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
@@ -37,10 +41,12 @@ class GormCouchdbGrailsPlugin {
             "grails-app/views/error.gsp"
     ]
 
+    def artefacts = [new CouchDomainClassArtefactHandler()]
+
     // TODO Fill in these fields
-    def author = "Warner Onstine"
+    def author = "Warner Onstine, Cory Hacking"
     def authorEmail = ""
-    def title = "GORM-CouchDB plugin"
+    def title = "CouchDB Plugin"
     def description = '''\\
 A plugin that emulates the behavior of the GORM-Hibernate plugin against a CouchDB-0.9.x NoSQL database
 '''

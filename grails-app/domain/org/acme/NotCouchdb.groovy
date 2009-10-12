@@ -21,11 +21,11 @@ package org.acme
  */
 class NotCouchdb {
 
-    Long id
-
     String name
-
     Integer age
+    Date lastUpdated
 
-    Long version
+    static constraints = {
+        name blank: false
+    }
 }

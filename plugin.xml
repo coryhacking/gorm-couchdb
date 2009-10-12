@@ -1,6 +1,6 @@
 <plugin name='gorm-couchdb' version='0.1' grailsVersion='1.1 &gt; *'>
-  <author>Warner Onstine</author>
-  <title>GORM-CouchDB plugin</title>
+  <author>Warner Onstine, Cory Hacking</author>
+  <title>CouchDB Plugin</title>
   <description>\
 A plugin that emulates the behavior of the GORM-Hibernate plugin against a CouchDB-0.9.x NoSQL database
 </description>
@@ -14,6 +14,5 @@ A plugin that emulates the behavior of the GORM-Hibernate plugin against a Couch
   </resources>
   <dependencies>
     <plugin name='core' version='1.1 &gt; *' />
-    <plugin name='domainClass' version='1.0 &gt; *' />
   </dependencies>
 </plugin>
