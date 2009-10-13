@@ -33,12 +33,12 @@ class GormCouchdbGrailsPlugin {
     def dependsOn = [core: '1.1 > *']
 
     def loadAfter = ['core']
-    def loadBefore = ['hibernate']
 
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
-            "grails-app/domain/org/acme/*.groovy",
-            "grails-app/views/error.gsp"
+            "grails-app/domain/**",
+            "grails-app/views/**",
+            "grails-app/conf/couchdb/views/**"
     ]
 
     def artefacts = [new CouchDomainClassArtefactHandler()]
@@ -48,11 +48,13 @@ class GormCouchdbGrailsPlugin {
     def authorEmail = ""
     def title = "CouchDB Plugin"
     def description = '''\\
-A plugin that emulates the behavior of the GORM-Hibernate plugin against a CouchDB-0.9.x NoSQL database
+A plugin that emulates the behavior of the GORM-Hibernate plugin against a CouchDB document-oriented database
 '''
 
     // URL to the plugin's documentation
     def documentation = "http://grails.org/GormCouchdb+Plugin"
+
+    def doWithSpring = CouchdbPluginSupport.doWithSpring
 
     def doWithDynamicMethods = CouchdbPluginSupport.doWithDynamicMethods
 
