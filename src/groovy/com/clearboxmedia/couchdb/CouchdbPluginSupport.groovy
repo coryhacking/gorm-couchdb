@@ -31,6 +31,7 @@ import org.jcouchdb.db.Options
 import org.jcouchdb.document.Attachment
 import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.exception.NotFoundException
+import org.jcouchdb.util.CouchDBUpdater
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean
 import org.springframework.context.ApplicationContext
 import org.springframework.validation.BeanPropertyBindingResult
@@ -47,6 +48,8 @@ public class CouchdbPluginSupport {
 
     static def doWithSpring = {
 
+        updateCouchViews(application)
+
         application.couchDomainClasses.each {CouchDomainClass dc ->
 
             // Note the use of Groovy's ability to use dynamic strings in method names!
@@ -54,15 +57,18 @@ public class CouchdbPluginSupport {
                 bean.singleton = false
                 bean.autowire = "byName"
             }
+
             "${dc.fullName}CouchDomainClass"(MethodInvokingFactoryBean) {
                 targetObject = ref("grailsApplication", true)
                 targetMethod = "getArtefact"
                 arguments = [CouchDomainClassArtefactHandler.TYPE, dc.fullName]
             }
+
             "${dc.fullName}PersistentClass"(MethodInvokingFactoryBean) {
                 targetObject = ref("${dc.fullName}CouchDomainClass")
                 targetMethod = "getClazz"
             }
+
             "${dc.fullName}Validator"(GrailsDomainClassValidator) {
                 messageSource = ref("messageSource")
                 domainClass = ref("${dc.fullName}CouchDomainClass")
@@ -75,6 +81,7 @@ public class CouchdbPluginSupport {
         def ds = application.config.couchdb
         Database db = new Database(ds.host, ds.port, ds.database)
 
+        // enhance our couch domain classes
         application.couchDomainClasses.each {CouchDomainClass domainClass ->
 
             DOMAIN_CLASS_MAP[domainClass.getFullName()] = domainClass
@@ -84,6 +91,28 @@ public class CouchdbPluginSupport {
 
             addValidationMethods(application, domainClass, ctx)
 
+        }
+    }
+
+    static updateCouchViews(GrailsApplication application) {
+        def views
+
+        // update the couch views
+        if (application.warDeployed) {
+            views = new File(application.parentContext.servletContext.getRealPath("/WEB-INF") + "/grails-app/couchdb/views" as String)
+        } else {
+            views = new File("./grails-app/conf/couchdb/views")
+        }
+
+        if (views.exists() && views.isDirectory()) {
+            def ds = application.config.couchdb
+
+            CouchDBUpdater updater = new CouchDBUpdater();
+            updater.setDatabase(new Database(ds.host, ds.port, ds.database));
+            updater.setDesignDocumentDir(views);
+            updater.updateDesignDocuments();
+        } else {
+            println "Warning, the couchdb views directory [${views.name}, ${views.path}] does not exist.  Views were not updated."
         }
     }
 
@@ -261,7 +290,7 @@ public class CouchdbPluginSupport {
         }
 
         metaClass.'static'.saveDesignDocument = {DesignDocument doc ->
-            return couchdb.createDocument(doc)
+            return couchdb.createOrUpdateDocument(doc)
         }
     }
 

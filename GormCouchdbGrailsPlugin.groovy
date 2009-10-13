@@ -41,9 +41,10 @@ class GormCouchdbGrailsPlugin {
             "grails-app/conf/couchdb/views/**"
     ]
 
-    def artefacts = [new CouchDomainClassArtefactHandler()]
+    def artefacts = [CouchDomainClassArtefactHandler]
 
-    // TODO Fill in these fields
+    def watchedResources = "file:./grails-app/conf/couchdb/views/**"
+
     def author = "Warner Onstine, Cory Hacking"
     def authorEmail = ""
     def title = "CouchDB Plugin"
@@ -58,4 +59,13 @@ A plugin that emulates the behavior of the GORM-Hibernate plugin against a Couch
 
     def doWithDynamicMethods = CouchdbPluginSupport.doWithDynamicMethods
 
+    def onChange = {event ->
+
+        if (event.source) {
+
+            // update the couch views... todo: update just the view specified
+            CouchdbPluginSupport.updateCouchViews(application)
+
+        }
+    }
 }

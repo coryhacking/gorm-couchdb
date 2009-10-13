@@ -32,10 +32,15 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
 
         def design = Task.getDesignDocument("tasks")
         if (!design) {
-
             design = new DesignDocument("tasks");
-            design.addView("open", new View("function(doc) { if (doc.type == 'project-task' && doc.completionDate == null) { emit(doc._id,{'startDate':doc.startDate}); }}"))
+        }
 
+        if (!design.views["byName"]) {
+
+            // add a temporary "open" view
+            design.addView("byName", new View("function(doc) { if (doc.type == 'project-task') { emit(doc.name,1); }}"))
+
+            // save the design document
             Task.saveDesignDocument(design)
         }
     }
@@ -123,6 +128,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             def t = new Task()
 
             t.taskId = "${p.id}-task-${i}"
+            t.name = "task-${i}"
             t.projectId = p.id
             t.startDate = new Date()
             t.description = "This is the description for task ${i}."
@@ -151,23 +157,23 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             println info
         }
 
-        result = Project.findByView("tasks/open")
+        result = Project.findByView("openTasks/byName")
         assertEquals "should have found 20 open tasks", result.size(), 20
         result.each {info ->
             println info
         }
 
-        result = Project.findByView("tasks/open", ['startkey': "gorm-couchdb-task-1", 'endkey': "gorm-couchdb-task-10"])
+        result = Project.findByView("openTasks/byName", ['startkey': "task-1", 'endkey': "task-10"])
         assertEquals "should have found 2 open tasks", result.size(), 2
         result.each {info ->
             println info
         }
 
-        result = Project.findByViewAndKeys("tasks/open", ["gorm-couchdb-task-15"])
+        result = Project.findByViewAndKeys("openTasks/byName", ["task-15"])
         assertEquals "should have found 1 open task", result.size(), 1
         result.each {info ->
             println info
-            assertEquals "should have found task #15", info.id, "gorm-couchdb-task-15"
+            assertEquals "should have found task #15", info.key, "task-15"
         }
 
     }
