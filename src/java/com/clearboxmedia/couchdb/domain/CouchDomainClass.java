@@ -18,11 +18,12 @@ package com.clearboxmedia.couchdb.domain;
 import com.clearboxmedia.couchdb.CouchAttachments;
 import com.clearboxmedia.couchdb.CouchEntity;
 import com.clearboxmedia.couchdb.CouchId;
-import com.clearboxmedia.couchdb.CouchRev;
+import com.clearboxmedia.couchdb.CouchVersion;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.codehaus.groovy.grails.commons.AbstractGrailsClass;
 import org.codehaus.groovy.grails.commons.GrailsDomainClass;
 import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty;
+import org.codehaus.groovy.grails.commons.GrailsDomainConfigurationUtil;
 import org.codehaus.groovy.grails.exceptions.GrailsDomainException;
 import org.codehaus.groovy.grails.validation.ConstrainedProperty;
 import org.codehaus.groovy.grails.validation.metaclass.ConstraintsEvaluatingDynamicProperty;
@@ -31,6 +32,8 @@ import org.springframework.validation.Validator;
 
 import grails.util.GrailsNameUtils;
 
+import javax.persistence.Id;
+import javax.persistence.Version;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.IncompleteAnnotationException;
 import java.lang.reflect.Field;
@@ -54,9 +57,9 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
     private Map<String, GrailsDomainClassProperty> persistentProperties = new HashMap<String, GrailsDomainClassProperty>();
     private GrailsDomainClassProperty[] persistentPropertyArray;
 
-    private CouchdbDomainClassProperty identifier;
-    private CouchdbDomainClassProperty version;
-    private CouchdbDomainClassProperty attachments;
+    private CouchDomainClassProperty identifier;
+    private CouchDomainClassProperty version;
+    private CouchDomainClassProperty attachments;
     private String type;
 
     private Map constraints = new HashMap();
@@ -91,24 +94,68 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
     }
 
     private void evaluateClassProperties(PropertyDescriptor[] descriptors) {
+
         for (PropertyDescriptor descriptor : descriptors) {
+            if (GrailsDomainConfigurationUtil.isNotConfigurational(descriptor)) {
+                final CouchDomainClassProperty property = new CouchDomainClassProperty(this, descriptor);
 
-            final CouchdbDomainClassProperty property = new CouchdbDomainClassProperty(this, descriptor);
-
-            if (property.isAnnotatedWith(CouchId.class)) {
-                this.identifier = property;
-            } else if (property.isAnnotatedWith(CouchRev.class)) {
-                this.version = property;
-            } else if (property.isAnnotatedWith(CouchAttachments.class)) {
-                this.attachments = property;
-            } else {
-                propertyMap.put(descriptor.getName(), property);
-                if (property.isPersistent()) {
-                    persistentProperties.put(descriptor.getName(), property);
+                if (property.isAnnotatedWith(CouchId.class) || property.isAnnotatedWith(Id.class)) {
+                    this.identifier = property;
+                } else if (property.isAnnotatedWith(CouchVersion.class) || property.isAnnotatedWith(Version.class)) {
+                    this.version = property;
+                } else if (property.isAnnotatedWith(CouchAttachments.class)) {
+                    this.attachments = property;
+                } else {
+                    propertyMap.put(descriptor.getName(), property);
+                    if (property.isPersistent()) {
+                        persistentProperties.put(descriptor.getName(), property);
+                    }
                 }
             }
         }
 
+        // if we don't have an annotated identifier, version, or attachments then try to find fields
+        //  with the simple names and use them...
+        if (this.identifier == null) {
+            if (propertyMap.containsKey(GrailsDomainClassProperty.IDENTITY)) {
+                this.identifier = (CouchDomainClassProperty) propertyMap.get(GrailsDomainClassProperty.IDENTITY);
+                propertyMap.remove(GrailsDomainClassProperty.IDENTITY);
+                persistentProperties.remove(GrailsDomainClassProperty.IDENTITY);
+            } else {
+                throw new GrailsDomainException("Identity property not found, but required in domain class [" + getFullName() + "]");
+            }
+        }
+
+        if (this.identifier.type != String.class) {
+            throw new GrailsDomainException("Identity property in domain class [" + getFullName() + "] must be a String.");
+        }
+
+        if (this.version == null) {
+            if (propertyMap.containsKey(GrailsDomainClassProperty.VERSION)) {
+                this.version = (CouchDomainClassProperty) propertyMap.get(GrailsDomainClassProperty.VERSION);
+                propertyMap.remove(GrailsDomainClassProperty.VERSION);
+                persistentProperties.remove(GrailsDomainClassProperty.VERSION);
+            } else {
+                throw new GrailsDomainException("Version property not found, but required in domain class [" + getFullName() + "]");
+            }
+        }
+
+        if (this.version.type != String.class) {
+            throw new GrailsDomainException("Version property in domain class [" + getFullName() + "] must be a String.");
+        }
+
+        if (this.attachments == null) {
+            if (propertyMap.containsKey("attachments")) {
+                this.attachments = (CouchDomainClassProperty) propertyMap.get("attachments");
+
+                propertyMap.remove("attachments");
+                persistentProperties.remove("attachments");
+            }
+        }
+
+        this.identifier.setIdentity(true);
+
+        // convert to arrays for optimization
         propertiesArray = propertyMap.values().toArray(new GrailsDomainClassProperty[propertyMap.size()]);
         persistentPropertyArray = persistentProperties.values().toArray(new GrailsDomainClassProperty[persistentProperties.size()]);
 
@@ -236,7 +283,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
         // do nothing
     }
 
-    private class CouchdbDomainClassProperty implements GrailsDomainClassProperty {
+    private class CouchDomainClassProperty implements GrailsDomainClassProperty {
 
         private Class ownerClass;
         private PropertyDescriptor descriptor;
@@ -247,9 +294,9 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
         private Method getter;
         private boolean persistent = true;
         private Field field;
-        private boolean version;
+        private boolean identity = false;
 
-        public CouchdbDomainClassProperty(GrailsDomainClass domain, PropertyDescriptor descriptor) {
+        public CouchDomainClassProperty(GrailsDomainClass domain, PropertyDescriptor descriptor) {
             this.ownerClass = domain.getClazz();
             this.domainClass = domain;
             this.descriptor = descriptor;
@@ -265,7 +312,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
         }
 
         private boolean checkPersistence(PropertyDescriptor descriptor) {
-            if (descriptor.getName().equals("class") || descriptor.getName().equals("metaClass") || descriptor.getName().equals("version")) {
+            if (descriptor.getName().equals("class") || descriptor.getName().equals("metaClass")) {
                 return false;
             }
             return true;
@@ -327,7 +374,11 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
         }
 
         public boolean isIdentity() {
-            return isAnnotatedWith(CouchId.class);
+            return identity;
+        }
+
+        public void setIdentity(boolean identity) {
+            this.identity = identity;
         }
 
         public boolean isOneToMany() {

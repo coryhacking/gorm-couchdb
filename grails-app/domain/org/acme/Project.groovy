@@ -17,7 +17,7 @@ package org.acme
 
 import com.clearboxmedia.couchdb.CouchEntity
 import com.clearboxmedia.couchdb.CouchId
-import com.clearboxmedia.couchdb.CouchRev
+import com.clearboxmedia.couchdb.CouchVersion
 
 /**
  *
@@ -29,7 +29,7 @@ class Project {
     @CouchId
     String id
 
-    @CouchRev
+    @CouchVersion
     String version
 
     String name

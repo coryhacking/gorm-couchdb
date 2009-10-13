@@ -107,6 +107,8 @@ public class CouchdbPluginSupport {
         if (views.exists() && views.isDirectory()) {
             def ds = application.config.couchdb
 
+            // Note that any map / reduce functions that are in couchdb but NOT here get
+            // removed when updating.  I believe this is by design in jcouchdb.
             CouchDBUpdater updater = new CouchDBUpdater();
             updater.setDatabase(new Database(ds.host, ds.port, ds.database));
             updater.setDesignDocumentDir(views);

@@ -13,21 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package org.acme.model
 
 /**
- * 
+ *
  * @author Warner Onstine, Cory Hacking
  */
-@Target ({ElementType.TYPE})
-@Retention (RetentionPolicy.RUNTIME)
-@Documented
-public @interface CouchRev {
+class Address {
 
+    String Street1
+    String Street2
+    String City
+    String State
+    String Zip
 }

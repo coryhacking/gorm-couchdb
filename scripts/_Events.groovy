@@ -21,11 +21,11 @@
 eventCreateWarStart = {warLocation, stagingDir ->
 
     // Remove the couchdb views from the web-inf/classes folder
-    ant.delete(dir:"${stagingDir}/WEB-INF/classes/couchdb", failonerror:true)
+    ant.delete(dir: "${stagingDir}/WEB-INF/classes/couchdb", failonerror: true)
 
     // create the couchdb resource folder
     def viewsDir = "${stagingDir}/WEB-INF/grails-app/couchdb/views"
-    ant.mkdir(dir:viewsDir)
+    ant.mkdir(dir: viewsDir)
 
     // copy everything over
     ant.copy(todir: viewsDir) {

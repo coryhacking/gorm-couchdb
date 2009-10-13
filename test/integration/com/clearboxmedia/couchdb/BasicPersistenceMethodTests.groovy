@@ -20,6 +20,7 @@ import org.acme.Task
 import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.document.DocumentInfo
 import org.jcouchdb.document.View
+import org.acme.Contact
 
 /**
  * @author Warner Onstine, Cory Hacking
@@ -202,5 +203,22 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         result.each {DocumentInfo info ->
             assertNull "Document ${info.id} should have been bulk-deleted successfully", info.error
         }
+    }
+
+    void testComplexObject() {
+        def c = new Contact()
+
+        c.name = "Tom Jones"
+        c.company = "Acme, Corp."
+        c.address.street1 = "100 Hollywood Blvd."
+        c.address.city = "Los Angeles"
+        c.address.state = "CA"
+
+        c.save()
+
+        assertNotNull "should have saved new contact", c
+        assertNotNull "should have retrieved id of new contact", c.id
+        
+        c.delete()
     }
 }

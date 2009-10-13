@@ -13,37 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.acme
+package com.clearboxmedia.couchdb;
 
-import com.clearboxmedia.couchdb.CouchEntity
-import com.clearboxmedia.couchdb.CouchId
-import com.clearboxmedia.couchdb.CouchVersion
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- *
+ * 
  * @author Warner Onstine, Cory Hacking
  */
-@CouchEntity(type = "project-task")
-class Task {
+@Target ({ElementType.TYPE})
+@Retention (RetentionPolicy.RUNTIME)
+@Documented
+public @interface CouchVersion {
 
-    @CouchId
-    String taskId
-
-    @CouchVersion
-    String taskVersion
-
-    String projectId
-    String name
-
-    Date startDate
-    Date completionDate
-    Integer estimatedHours
-    Integer actualHours
-
-    String description
-
-    static constraints = {
-        projectId blank: false
-        name blank: false
-    }
 }

@@ -38,7 +38,9 @@ class GormCouchdbGrailsPlugin {
     def pluginExcludes = [
             "grails-app/domain/**",
             "grails-app/views/**",
-            "grails-app/conf/couchdb/views/**"
+            "grails-app/conf/couchdb/views/**",
+            "src/groovy/org/acme/**",
+            "src/java/org/acme/**"
     ]
 
     def artefacts = [CouchDomainClassArtefactHandler]

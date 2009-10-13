@@ -16,34 +16,25 @@
 package org.acme
 
 import com.clearboxmedia.couchdb.CouchEntity
-import com.clearboxmedia.couchdb.CouchId
-import com.clearboxmedia.couchdb.CouchVersion
+import org.acme.model.Address
 
 /**
  *
  * @author Warner Onstine, Cory Hacking
  */
-@CouchEntity(type = "project-task")
-class Task {
+@CouchEntity
+class Contact {
 
-    @CouchId
-    String taskId
+    String id
+    String version
 
-    @CouchVersion
-    String taskVersion
-
-    String projectId
     String name
-
-    Date startDate
-    Date completionDate
-    Integer estimatedHours
-    Integer actualHours
-
-    String description
+    String company
+    Address address = new Address()
 
     static constraints = {
-        projectId blank: false
-        name blank: false
+        id nullable: true
+        version nullable: true
+        company nullable: true
     }
 }
