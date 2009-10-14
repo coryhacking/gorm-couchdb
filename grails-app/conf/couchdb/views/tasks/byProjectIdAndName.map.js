@@ -1,6 +1,6 @@
 
 function(doc) {
     if (doc.type == 'project-task') {
-        emit([doc.projectId, doc.name], 1);
+        emit([doc.projectId, doc.name], null);
     }
 }

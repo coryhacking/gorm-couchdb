@@ -15,7 +15,6 @@
  */
 package com.clearboxmedia.couchdb
 
-import com.clearboxmedia.couchdb.domain.CouchDocument
 import com.clearboxmedia.couchdb.domain.CouchDomainClass
 import com.clearboxmedia.couchdb.domain.CouchDomainClassArtefactHandler
 import net.sf.json.JSON

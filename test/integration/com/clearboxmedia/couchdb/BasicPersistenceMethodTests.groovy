@@ -39,7 +39,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         if (!design.views["byName"]) {
 
             // add a temporary "open" view
-            design.addView("byName", new View("function(doc) { if (doc.type == 'project-task') { emit(doc.name,1); }}"))
+            design.addView("byName", new View("function(doc) { if (doc.type == 'project-task') { emit(doc.name, null); }}"))
 
             // save the design document
             Task.saveDesignDocument(design)

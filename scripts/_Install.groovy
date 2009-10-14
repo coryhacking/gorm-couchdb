@@ -10,3 +10,4 @@
 //
 
 ant.mkdir(dir:"${basedir}/grails-app/conf/couchdb/views")
+ant.mkdir(dir:"${basedir}/grails-app/couchdb")

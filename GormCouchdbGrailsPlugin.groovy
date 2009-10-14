@@ -33,19 +33,25 @@ class GormCouchdbGrailsPlugin {
     def dependsOn = [core: '1.1 > *']
 
     def loadAfter = ['core']
-
+	
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
+            "grails-app/conf/spring/**",
+            "grails-app/conf/hibernate/**",
+            "grails-app/i18n/**",
             "grails-app/domain/**",
             "grails-app/views/**",
             "grails-app/conf/couchdb/views/**",
+            "grails-app/couchdb/**",
             "src/groovy/org/acme/**",
             "src/java/org/acme/**"
     ]
 
     def artefacts = [CouchDomainClassArtefactHandler]
 
-    def watchedResources = "file:./grails-app/conf/couchdb/views/**"
+    def watchedResources = [
+            "file:./grails-app/conf/couchdb/views/**"
+    ]
 
     def author = "Warner Onstine, Cory Hacking"
     def authorEmail = ""

@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb.domain;
+package com.clearboxmedia.couchdb;
 
-import com.clearboxmedia.couchdb.CouchJsonConfig
 import net.sf.json.JSON
 import net.sf.json.JSONObject
 import net.sf.json.JSONSerializer
