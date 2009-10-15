@@ -16,7 +16,6 @@
 package org.acme
 
 import com.clearboxmedia.couchdb.CouchEntity
-import org.acme.model.Address
 
 /**
  *
