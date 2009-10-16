@@ -22,6 +22,7 @@ import net.sf.json.JSONObject
 import net.sf.json.JSONSerializer
 import net.sf.json.JsonConfig
 import org.codehaus.groovy.grails.commons.GrailsApplication
+import org.codehaus.groovy.grails.commons.GrailsDomainClass
 import org.codehaus.groovy.grails.plugins.DomainClassPluginSupport
 import org.codehaus.groovy.grails.support.SoftThreadLocalMap
 import org.codehaus.groovy.grails.validation.GrailsDomainClassValidator
@@ -45,11 +46,19 @@ public class CouchdbPluginSupport {
     static final DOMAIN_CLASS_MAP = new HashMap<String, CouchDomainClass>();
     static final PROPERTY_INSTANCE_MAP = new SoftThreadLocalMap()
 
-    static def doWithSpring = {
+    static def doWithSpring = {ApplicationContext ctx ->
 
         updateCouchViews(application)
 
-        application.couchDomainClasses.each {CouchDomainClass dc ->
+        // register our CouchDomainClasses artefacts that weren't already picked up by grails
+        application.domainClasses.each {GrailsDomainClass dc ->
+            if (CouchDomainClassArtefactHandler.isCouchDomainClass(dc.clazz)) {
+                CouchDomainClass couchDomainClass = new CouchDomainClass(dc.clazz)
+                application.addArtefact(CouchDomainClassArtefactHandler.TYPE, couchDomainClass)
+            }
+        }
+
+        application.CouchDomainClasses.each {CouchDomainClass dc ->
 
             // Note the use of Groovy's ability to use dynamic strings in method names!
             "${dc.fullName}"(dc.getClazz()) {bean ->
@@ -57,31 +66,34 @@ public class CouchdbPluginSupport {
                 bean.autowire = "byName"
             }
 
-            "${dc.fullName}CouchDomainClass"(MethodInvokingFactoryBean) {
+            "${dc.fullName}DomainClass"(MethodInvokingFactoryBean) {
                 targetObject = ref("grailsApplication", true)
                 targetMethod = "getArtefact"
                 arguments = [CouchDomainClassArtefactHandler.TYPE, dc.fullName]
             }
 
             "${dc.fullName}PersistentClass"(MethodInvokingFactoryBean) {
-                targetObject = ref("${dc.fullName}CouchDomainClass")
+                targetObject = ref("${dc.fullName}DomainClass")
                 targetMethod = "getClazz"
             }
 
             "${dc.fullName}Validator"(GrailsDomainClassValidator) {
                 messageSource = ref("messageSource")
-                domainClass = ref("${dc.fullName}CouchDomainClass")
+                domainClass = ref("${dc.fullName}DomainClass")
                 grailsApplication = ref("grailsApplication", true)
             }
         }
     }
 
     static def doWithDynamicMethods = {ApplicationContext ctx ->
-        def ds = application.config.couchdb
-        Database db = new Database(ds.host, ds.port, ds.database)
+        enhanceDomainClasses(application, ctx)
+    }
 
-        // enhance our couch domain classes
-        application.couchDomainClasses.each {CouchDomainClass domainClass ->
+    static enhanceDomainClasses(GrailsApplication application, ApplicationContext ctx) {
+
+        application.CouchDomainClasses.each {CouchDomainClass domainClass ->
+            def ds = application.config.couchdb
+            Database db = new Database(ds.host, ds.port, ds.database)
 
             DOMAIN_CLASS_MAP[domainClass.getFullName()] = domainClass
 

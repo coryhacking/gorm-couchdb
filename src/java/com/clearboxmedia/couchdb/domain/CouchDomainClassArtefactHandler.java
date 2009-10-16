@@ -31,6 +31,10 @@ public class CouchDomainClassArtefactHandler extends ArtefactHandlerAdapter {
     }
 
     public boolean isArtefactClass(Class clazz) {
+        return isCouchDomainClass(clazz);
+    }
+
+    public static boolean isCouchDomainClass(Class clazz) {
         return clazz != null && clazz.getAnnotation(CouchEntity.class) != null;
     }
 

@@ -1,8 +1,11 @@
+import com.clearboxmedia.couchdb.cfg.CouchDomainConfiguration
+
 dataSource {
     pooled = true
     driverClassName = "org.hsqldb.jdbcDriver"
     username = "sa"
     password = ""
+    configClass = CouchDomainConfiguration.class
 }
 
 hibernate {

@@ -35,7 +35,7 @@ class GormCouchdbGrailsPlugin {
     // the other plugins this plugin depends on
     def dependsOn = [core: '1.1 > *']
 
-    def loadAfter = ['core']
+    def loadAfter = ['core', 'domainClass', 'hibernate']
     
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
@@ -99,26 +99,26 @@ A plugin that emulates the behavior of the GORM-Hibernate plugin against a Couch
                     bean.autowire = "byName"
                 }
 
-                "${dc.fullName}CouchDomainClass"(MethodInvokingFactoryBean) {
+                "${dc.fullName}DomainClass"(MethodInvokingFactoryBean) {
                     targetObject = ref("grailsApplication", true)
                     targetMethod = "getArtefact"
                     arguments = [CouchDomainClassArtefactHandler.TYPE, dc.fullName]
                 }
 
                 "${dc.fullName}PersistentClass"(MethodInvokingFactoryBean) {
-                    targetObject = ref("${dc.fullName}CouchDomainClass")
+                    targetObject = ref("${dc.fullName}DomainClass")
                     targetMethod = "getClazz"
                 }
 
                 "${dc.fullName}Validator"(GrailsDomainClassValidator) {
                     messageSource = ref("messageSource")
-                    domainClass = ref("${dc.fullName}CouchDomainClass")
+                    domainClass = ref("${dc.fullName}DomainClass")
                     grailsApplication = ref("grailsApplication", true)
                 }
             }
 
             context.registerBeanDefinition("${dc.fullName}", beans.getBeanDefinition("${dc.fullName}"))
-            context.registerBeanDefinition("${dc.fullName}CouchDomainClass", beans.getBeanDefinition("${dc.fullName}CouchDomainClass"))
+            context.registerBeanDefinition("${dc.fullName}DomainClass", beans.getBeanDefinition("${dc.fullName}DomainClass"))
             context.registerBeanDefinition("${dc.fullName}PersistentClass", beans.getBeanDefinition("${dc.fullName}PersistentClass"))
             context.registerBeanDefinition("${dc.fullName}Validator", beans.getBeanDefinition("${dc.fullName}Validator"))
 
