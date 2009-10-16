@@ -165,11 +165,19 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             println info
         }
 
+        result = Project.findByView("openTasks/byName", ["offset":5, "max":10])
+        assertEquals "should have found 10 open tasks", result.size(), 10
+        
         result = Project.findByView("openTasks/byName", ['startkey': "task-1", 'endkey': "task-10"])
         assertEquals "should have found 2 open tasks", result.size(), 2
         result.each {info ->
             println info
         }
+
+        def descending = Project.findByView("openTasks/byName", ['startkey': "task-10", 'endkey': "task-1", "order":"desc"])
+        assertEquals "should have found 2 open tasks", descending.size(), 2
+        assertEquals "should be in reverse order", result[0].id, descending[1].id
+        assertEquals "should be in reverse order", result[1].id, descending[0].id
 
         result = Project.findByViewAndKeys("openTasks/byName", ["task-15"])
         assertEquals "should have found 1 open task", result.size(), 1
