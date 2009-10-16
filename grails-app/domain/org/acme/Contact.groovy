@@ -30,10 +30,18 @@ class Contact {
     String name
     String company
     Address address = new Address()
+    Gender gender
 
     static constraints = {
         id nullable: true
         version nullable: true
         company nullable: true
+        gender nullable: true
+    }
+
+    static enum Gender {
+        MALE, FEMALE
     }
 }
+
+

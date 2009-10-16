@@ -21,6 +21,7 @@ import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.document.DocumentInfo
 import org.jcouchdb.document.View
 import org.acme.Contact
+import org.acme.Contact.Gender
 
 /**
  * @author Warner Onstine, Cory Hacking
@@ -213,12 +214,18 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         c.address.street1 = "100 Hollywood Blvd."
         c.address.city = "Los Angeles"
         c.address.state = "CA"
-
         c.save()
 
         assertNotNull "should have saved new contact", c
         assertNotNull "should have retrieved id of new contact", c.id
-        
+        assertNull "gender should be null", c.gender
+
+        c.gender = Gender.MALE
+        c.save()
+
+        def c2 = Contact.get(c.id)
+        assertEquals "contact should be male", c2.gender, Gender.MALE
+
         c.delete()
     }
 }

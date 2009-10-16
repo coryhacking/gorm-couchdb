@@ -43,14 +43,13 @@ import org.springframework.validation.Errors
  */
 public class CouchdbPluginSupport {
 
-    static final DOMAIN_CLASS_MAP = new HashMap<String, CouchDomainClass>();
     static final PROPERTY_INSTANCE_MAP = new SoftThreadLocalMap()
 
     static def doWithSpring = {ApplicationContext ctx ->
 
         updateCouchViews(application)
 
-        // register our CouchDomainClasses artefacts that weren't already picked up by grails
+        // register our CouchDomainClass artefacts that weren't already picked up by grails
         application.domainClasses.each {GrailsDomainClass dc ->
             if (CouchDomainClassArtefactHandler.isCouchDomainClass(dc.clazz)) {
                 CouchDomainClass couchDomainClass = new CouchDomainClass(dc.clazz)
@@ -95,8 +94,6 @@ public class CouchdbPluginSupport {
             def ds = application.config.couchdb
             Database db = new Database(ds.host, ds.port, ds.database)
 
-            DOMAIN_CLASS_MAP[domainClass.getFullName()] = domainClass
-
             addInstanceMethods(application, domainClass, ctx, db)
             addStaticMethods(application, domainClass, ctx, db)
 
@@ -140,10 +137,11 @@ public class CouchdbPluginSupport {
 
         metaClass.save = {Map args = [:] ->
 
+            // todo: add support for failOnError:true in grails 1.2 (GRAILS-4343)
             if (validate()) {
 
                 // create our couch document that can be serialized to json properly
-                CouchDocument doc = convertToCouchDocument(delegate)
+                CouchDocument doc = convertToCouchDocument(application, delegate)
 
                 // save the document
                 couchdb.createOrUpdateDocument doc
@@ -222,7 +220,7 @@ public class CouchdbPluginSupport {
             def couchDocuments = new ArrayList()
 
             documents.each {doc ->
-                couchDocuments << convertToCouchDocument(doc)
+                couchDocuments << convertToCouchDocument(application, doc)
 
             }
 
@@ -237,7 +235,7 @@ public class CouchdbPluginSupport {
             def couchDocuments = new ArrayList()
 
             documents.each {doc ->
-                couchDocuments << convertToCouchDocument(doc)
+                couchDocuments << convertToCouchDocument(application, doc)
 
             }
 
@@ -397,13 +395,10 @@ public class CouchdbPluginSupport {
         return doc
     }
 
-    private static CouchDocument convertToCouchDocument(Object domain) {
-        return convertToCouchDocument(DOMAIN_CLASS_MAP[domain.getClass().getName()], domain)
-    }
-
-    private static CouchDocument convertToCouchDocument(CouchDomainClass dc, Object domain) {
+    private static CouchDocument convertToCouchDocument(GrailsApplication application, Object domain) {
         CouchDocument doc = new CouchDocument()
 
+        CouchDomainClass dc = (CouchDomainClass) application.getArtefact(CouchDomainClassArtefactHandler.TYPE, domain.getClass().getName())
         if (dc) {
 
             // set the document type if it is enabled set it first, so that it can be
@@ -459,18 +454,29 @@ public class CouchdbPluginSupport {
         def options = new Options()
 
         if (o) {
-
-            // convert the map to options; some options need to be encoded, but the
-            //  Options(Map) constructor doesn't do it properly so we're doing it manually.
-            o.each {key, value ->
+            o.each {String key, value ->
                 if (key == "key" || key == "startkey" || key == "endkey") {
+
+                    // keys need to be encoded
                     options.put(key, value)
+
+                } else if (key == "max") {
+                    options.limit(value)
+
+                } else if (key == "offset") {
+                    options.skip(value)
+
+                } else if (key == "order") {
+                    options.descending((value == "desc"))
+
                 } else {
+
+                    // put the rest unencoded
                     options.putUnencoded(key, value)
                 }
             }
         }
-
+        
         return options
     }
 }
