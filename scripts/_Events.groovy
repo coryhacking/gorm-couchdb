@@ -33,4 +33,32 @@ eventCreateWarStart = {warLocation, stagingDir ->
     }
 
 }
+
+eventCompileStart = {target ->
+
+    // make sure that our ast transformation and other classes get compiled first
+    if (baseName == "gorm-couchdb") {
+
+        ant.sequential {
+            echo "Compiling gorm-couchdb plugin..."
+            
+            path id: "grails.compile.classpath", compileClasspath
+            mkdir dir: classesDirPath
+
+            def classpathId = "grails.compile.classpath"
+
+            groovyc(destdir: classesDirPath,
+                    projectName: grailsSettings.baseDir.name,
+                    classpathref: classpathId,
+                    encoding: "UTF-8") {
+
+                src(path: "${basedir}/src/groovy")
+                src(path: "${basedir}/src/java")
+
+                javac(classpathref: classpathId, debug: "yes")
+            }
+        }
+    }
+}
+
             

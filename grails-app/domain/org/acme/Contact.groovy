@@ -24,17 +24,12 @@ import com.clearboxmedia.couchdb.CouchEntity
 @CouchEntity
 class Contact {
 
-    String id
-    String version
-
     String name
     String company
     Address address = new Address()
     Gender gender
 
     static constraints = {
-        id nullable: true
-        version nullable: true
         company nullable: true
         gender nullable: true
     }

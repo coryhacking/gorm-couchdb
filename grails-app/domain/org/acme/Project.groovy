@@ -26,10 +26,7 @@ import com.clearboxmedia.couchdb.CouchVersion
 @CouchEntity
 class Project {
 
-    @CouchId
     String id
-
-    @CouchVersion
     String version
 
     String name
