@@ -40,9 +40,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -303,12 +306,16 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
             this.name = descriptor.getName();
             this.type = descriptor.getPropertyType();
             this.getter = descriptor.getReadMethod();
+            
             try {
                 this.field = domain.getClazz().getDeclaredField(descriptor.getName());
             } catch (NoSuchFieldException e) {
                 // ignore
             }
+
             this.persistent = checkPersistence(descriptor);
+            List transientProps = getTransients(domainClass);
+            checkIfTransient(transientProps);
         }
 
         private boolean checkPersistence(PropertyDescriptor descriptor) {
@@ -318,11 +325,42 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
             return true;
         }
 
-        public <T extends java.lang.annotation.Annotation> T getAnnotation(Class<T> annotation) {
-            if (field == null) {
-                return null;
+        // Checks whether this property is transient... copied from DefaultGrailsDomainClassProperty.
+        private void checkIfTransient(List transientProps) {
+            if (transientProps != null) {
+                for (Iterator i = transientProps.iterator(); i.hasNext();) {
+
+                    // make sure its a string otherwise ignore. Note: Again maybe a warning?
+                    Object currentObj = i.next();
+                    if (currentObj instanceof String) {
+                        String propertyName = (String) currentObj;
+
+                        // if the property name is on the not persistant list
+                        // then set persistant to false
+                        if (propertyName.equals(this.name)) {
+                            this.persistent = false;
+                            break;
+                        }
+                    }
+                }
             }
-            return this.field.getAnnotation(annotation);
+        }
+
+        // Retrieves the transient properties... copied from DefaultGrailsDomainClassProperty.
+        private List getTransients(GrailsDomainClass domainClass) {
+            List transientProps;
+            transientProps = (List) domainClass.getPropertyValue(TRANSIENT, List.class);
+
+            // Undocumented feature alert! Steve insisted on this :-)
+            List evanescent = (List) domainClass.getPropertyValue(EVANESCENT, List.class);
+            if (evanescent != null) {
+                if (transientProps == null) {
+                    transientProps = new ArrayList();
+                }
+
+                transientProps.addAll(evanescent);
+            }
+            return transientProps;
         }
 
         public int getFetchMode() {
