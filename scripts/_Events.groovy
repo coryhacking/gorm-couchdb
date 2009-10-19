@@ -37,7 +37,7 @@ eventCreateWarStart = {warLocation, stagingDir ->
 eventCompileStart = {target ->
 
     // make sure that our ast transformation and other classes get compiled first
-    if (baseName == "gorm-couchdb") {
+    if (grailsAppName == "gorm-couchdb") {
 
         ant.sequential {
             echo "Compiling gorm-couchdb plugin..."

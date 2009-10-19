@@ -27,10 +27,10 @@ import org.codehaus.groovy.grails.validation.GrailsDomainClassValidator
 class GormCouchdbGrailsPlugin {
 
     // the plugin version
-    def version = "0.1"
+    def version = '0.1'
 
     // the version or versions of Grails the plugin is designed for
-    def grailsVersion = "1.1 > *"
+    def grailsVersion = '1.1.1 > *'
 
     // the other plugins this plugin depends on
     def dependsOn = [core: '1.1 > *']
@@ -39,35 +39,35 @@ class GormCouchdbGrailsPlugin {
     
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
-            "grails-app/conf/spring/**",
-            "grails-app/conf/hibernate/**",
+            'grails-app/conf/spring/**',
+            'grails-app/conf/hibernate/**',
             'grails-app/controllers/**',
             'grails-app/domain/**',
             'grails-app/views/**',
             'grails-app/i18n/**',
             'web-app/**',
 
-            "grails-app/conf/couchdb/views/**",
-            "src/groovy/org/acme/**",
-            "src/java/org/acme/**"
+            'grails-app/conf/couchdb/views/**',
+            'src/groovy/org/acme/**',
+            'src/java/org/acme/**'
     ]
 
     def artefacts = [CouchDomainClassArtefactHandler]
 
     def watchedResources = [
-            "file:./grails-app/conf/couchdb/views/**",
-            "file:./grails-app/couchdb/**"
+            'file:./grails-app/conf/couchdb/views/**',
+            'file:./grails-app/couchdb/**'
     ]
 
-    def author = "Warner Onstine, Cory Hacking"
-    def authorEmail = ""
-    def title = "Grails CouchDB Plugin"
+    def author = 'Warner Onstine, Cory Hacking'
+    def authorEmail = ''
+    def title = 'Grails CouchDB Plugin'
     def description = '''\\
 A plugin that emulates the behavior of the GORM-Hibernate plugin against a CouchDB document-oriented database
 '''
 
     // URL to the plugin's documentation
-    def documentation = "http://grails.org/GormCouchdb+Plugin"
+    def documentation = 'http://grails.org/GormCouchdb+Plugin'
 
     def doWithSpring = CouchdbPluginSupport.doWithSpring
 
