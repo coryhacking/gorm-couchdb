@@ -23,6 +23,7 @@ import net.sf.json.JSONSerializer
 import net.sf.json.JsonConfig
 import org.codehaus.groovy.grails.commons.GrailsApplication
 import org.codehaus.groovy.grails.commons.GrailsDomainClass
+import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
 import org.codehaus.groovy.grails.plugins.DomainClassPluginSupport
 import org.codehaus.groovy.grails.support.SoftThreadLocalMap
 import org.codehaus.groovy.grails.validation.GrailsDomainClassValidator
@@ -141,7 +142,7 @@ public class CouchdbPluginSupport {
             if (validate()) {
 
                 // create our couch document that can be serialized to json properly
-                CouchDocument doc = convertToCouchDocument(application, delegate)
+                CouchDocument doc = convertToCouchDocument(application, autoTimeStamp(application, delegate))
 
                 // save the document
                 couchdb.createOrUpdateDocument doc
@@ -191,10 +192,12 @@ public class CouchdbPluginSupport {
 
         metaClass.'static'.get = {Serializable docId ->
             try {
+                // read the json document from the database
                 def json = couchdb.getDocument(JSONObject.class, docId.toString())
-                def domain = convertToDomainObject(domainClass, json)
 
-                return domain
+                // convert it to our domain object
+                // todo: make sure that the type matches the appropriate domain class or look it up
+                return convertToDomainObject(domainClass, json)
 
             } catch (NotFoundException e) {
                 // fall through to return null
@@ -217,11 +220,10 @@ public class CouchdbPluginSupport {
         }
 
         metaClass.'static'.bulkSave = {List documents, Boolean allOrNothing ->
-            def couchDocuments = new ArrayList()
+            def couchDocuments = []
 
             documents.each {doc ->
-                couchDocuments << convertToCouchDocument(application, doc)
-
+                couchDocuments << convertToCouchDocument(application, autoTimeStamp(application, doc))
             }
 
             return couchdb.bulkCreateDocuments(couchDocuments, allOrNothing)
@@ -371,6 +373,33 @@ public class CouchdbPluginSupport {
         }
     }
 
+    private static Object autoTimeStamp(GrailsApplication application, Object domain) {
+
+        CouchDomainClass dc = (CouchDomainClass) application.getArtefact(CouchDomainClassArtefactHandler.TYPE, domain.getClass().getName())
+        if (dc) {
+            def metaClass = dc.metaClass
+
+            MetaProperty property = metaClass.hasProperty(dc, GrailsDomainClassProperty.DATE_CREATED)
+            def time = System.currentTimeMillis()
+            if (property && getDocumentVersion(dc, domain) == null) {
+                def now = property.getType().newInstance([time] as Object[])
+                domain[property.name] = now
+            }
+
+            property = metaClass.hasProperty(dc, GrailsDomainClassProperty.LAST_UPDATED)
+            if (property) {
+                def now = property.getType().newInstance([time] as Object[])
+                domain[property.name] = now
+            }
+        } else {
+
+            // todo: what do we do with an object we don't know how to convert?
+
+        }
+
+        return domain
+    }
+
     private static Object convertToDomainObject(CouchDomainClass dc, JSON json) {
         JsonConfig jsonConfig = new CouchJsonConfig();
         jsonConfig.setRootClass(dc.clazz);
@@ -476,7 +505,7 @@ public class CouchdbPluginSupport {
                 }
             }
         }
-        
+
         return options
     }
 }

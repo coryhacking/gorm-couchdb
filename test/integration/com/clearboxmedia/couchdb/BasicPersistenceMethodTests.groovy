@@ -57,26 +57,33 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
 
     void testSaveAndGet() {
 
-        def p = new Project(name: "InConcert")
+        def p1 = new Project(name: "InConcert")
 
-        p.startDate = new Date()
-        p.lastUpdated = new Date()
+        p1.startDate = new Date()
 
-        p.save()
+        p1.save()
 
-        assertNotNull "should have saved new project", p
-        assertNotNull "should have retrieved id of new project", p.id
-        assertNotNull "should have retrieved revision of new project", p.version
+        assertNotNull "should have saved new project", p1
+        assertNotNull "should have retrieved id of new project", p1.id
+        assertNotNull "should have retrieved revision of new project", p1.version
+        assertNotNull "should have set dateCreated", p1.dateCreated
+        assertNotNull "should have set lastUpdated", p1.lastUpdated
 
-        println "id and revision from saved project is ${p.id} ${p.version}"
+        println "id and revision from saved project is ${p1.id} ${p1.version}"
 
-        def p2 = Project.get(p.id)
+        def p2 = Project.get(p1.id)
 
         assertNotNull "should have retrieved a project", p2
-        assertEquals "project ids should be equal", p.id, p2.id
-        assertEquals "project revisions should be equal", p.version, p2.version
+        assertEquals "project ids should be equal", p1.id, p2.id
+        assertEquals "project revisions should be equal", p1.version, p2.version
 
-        p.delete()
+        Thread.currentThread().sleep(500);
+
+        p2.save()
+        assertTrue "lastUpdated should be different", !p1.lastUpdated.equals(p2.lastUpdated)
+        assertTrue "p2.lastUpdated should be after p1.lastUpdated", p1.lastUpdated.before(p2.lastUpdated)
+
+        p2.delete()
     }
 
     void testUpdateAndDelete() {
@@ -97,7 +104,6 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             println "project ${p.id} revision ${p.version} was read."
         }
 
-        p.lastUpdated = new Date()
         p.save()
 
         assertNotNull "should have saved a project", p
@@ -143,8 +149,27 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
 
         // verify that they all saved
         result.each {DocumentInfo info ->
-            assertNull "Document ${info.id} should have been bulk-saved successfully", info.error
+            assertNull "Document ${info.id} should have been bulk-saved successfully [${info.error}]", info.error
         }
+
+        def t1 = Task.get(result[10].id)
+        assertNotNull "bulkSave should have set dateCreated", t1.dateCreated
+        assertNotNull "bulkSave should have set lastUpdated", t1.lastUpdated
+
+        def t2 = Task.get(t1.taskId)
+
+        bulkDocuments.clear()
+        bulkDocuments << t2
+
+        Thread.currentThread().sleep(500);
+        
+        result = Task.bulkSave(bulkDocuments)
+        t2 = Task.get(result[0].id)
+
+        assertEquals "project id's should be the same", t1.taskId, t2.taskId
+        assertTrue "lastUpdated should be different", !t1.lastUpdated.equals(t2.lastUpdated)
+        assertTrue "t2.lastUpdated should be after t1.lastUpdated", t2.lastUpdated.after(t1.lastUpdated)
+
     }
 
     void testFind() {
@@ -160,16 +185,16 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         }
 
         result = Project.findByView("openTasks/byName")
-        assertEquals "should have found 20 open tasks", result.size(), 20
+        assertEquals "should have found 20 open tasks", 20, result.size()
         result.each {info ->
             println info
         }
 
         result = Project.findByView("openTasks/byName", ["offset":5, "max":10])
-        assertEquals "should have found 10 open tasks", result.size(), 10
+        assertEquals "should have found 10 open tasks", 10, result.size()
         
         result = Project.findByView("openTasks/byName", ['startkey': "task-1", 'endkey': "task-10"])
-        assertEquals "should have found 2 open tasks", result.size(), 2
+        assertEquals "should have found 2 open tasks", 2, result.size()
         result.each {info ->
             println info
         }
@@ -180,10 +205,10 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertEquals "should be in reverse order", result[1].id, descending[0].id
 
         result = Project.findByViewAndKeys("openTasks/byName", ["task-15"])
-        assertEquals "should have found 1 open task", result.size(), 1
+        assertEquals "should have found 1 open task", 1, result.size()
         result.each {info ->
             println info
-            assertEquals "should have found task #15", info.key, "task-15"
+            assertEquals "should have found task #15", "task-15", info.key
         }
 
     }

@@ -31,8 +31,10 @@ class Project {
 
     String name
     Date startDate
-    Date lastUpdated
     String frequency
+
+    Date dateCreated
+    Date lastUpdated
 
     static constraints = {
         id nullable: true

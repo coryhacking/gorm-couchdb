@@ -42,6 +42,9 @@ class Task {
 
     String description
 
+    Date dateCreated
+    Date lastUpdated
+
     static constraints = {
         projectId blank: false
         name blank: false
