@@ -17,6 +17,8 @@ hibernate {
 couchdb {
     host = "localhost"
     port = 5984
+    username = ""
+    password = ""
 }
 
 // environment specific settings

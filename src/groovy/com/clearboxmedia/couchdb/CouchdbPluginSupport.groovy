@@ -21,6 +21,9 @@ import net.sf.json.JSON
 import net.sf.json.JSONObject
 import net.sf.json.JSONSerializer
 import net.sf.json.JsonConfig
+import org.apache.commons.lang.StringUtils
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
 import org.codehaus.groovy.grails.commons.GrailsApplication
 import org.codehaus.groovy.grails.commons.GrailsDomainClass
 import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
@@ -92,8 +95,7 @@ public class CouchdbPluginSupport {
     static enhanceDomainClasses(GrailsApplication application, ApplicationContext ctx) {
 
         application.CouchDomainClasses.each {CouchDomainClass domainClass ->
-            def ds = application.config.couchdb
-            Database db = new Database(ds.host, ds.port, ds.database)
+            Database db = getCouchDatabase(application)
 
             addInstanceMethods(application, domainClass, ctx, db)
             addStaticMethods(application, domainClass, ctx, db)
@@ -114,12 +116,11 @@ public class CouchdbPluginSupport {
         }
 
         if (views.exists() && views.isDirectory()) {
-            def ds = application.config.couchdb
 
             // Note that any map / reduce functions that are in couchdb but NOT here get
             // removed when updating.  I believe this is by design in jcouchdb.
             CouchDBUpdater updater = new CouchDBUpdater();
-            updater.setDatabase(new Database(ds.host, ds.port, ds.database));
+            updater.setDatabase(getCouchDatabase(application));
             updater.setDesignDocumentDir(views);
             updater.updateDesignDocuments();
         } else {
@@ -477,6 +478,36 @@ public class CouchdbPluginSupport {
         if (att) {
             domain[att.name]
         }
+    }
+
+    private static Database getCouchDatabase(GrailsApplication application) {
+        def ds = application.config.couchdb
+
+        String host = ds?.host ?: "localhost"
+        Integer port = ds?.port ?: 5984
+        String database = ds?.database ?: ""
+        String username = ds?.username ?: ""
+        String password = ds?.password ?: ""
+
+        String realm = ds?.realm ?: null
+        String scheme = ds?.scheme ?: null
+
+        Database db = new Database(host, port, database)
+
+        // check to see if there are any user credentials and set them
+        if (StringUtils.isNotEmpty(username)) {
+            def credentials = new UsernamePasswordCredentials(username, password)
+            def authScope = new AuthScope(host, port)
+
+            // set the realm and scheme if they are set
+            if (StringUtils.isNotEmpty(realm) || StringUtils.isNotEmpty(scheme)) {
+                authScope = new AuthScope(host, port, realm, scheme)
+            }
+
+            db.server.setCredentials(authScope, credentials)
+        }
+
+        return db
     }
 
     private static Options getOptions(Map o) {

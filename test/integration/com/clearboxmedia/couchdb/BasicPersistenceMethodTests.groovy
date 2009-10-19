@@ -77,7 +77,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertEquals "project ids should be equal", p1.id, p2.id
         assertEquals "project revisions should be equal", p1.version, p2.version
 
-        Thread.currentThread().sleep(500);
+        Thread.currentThread().sleep(1000);
 
         p2.save()
         assertTrue "lastUpdated should be different", !p1.lastUpdated.equals(p2.lastUpdated)
@@ -161,7 +161,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         bulkDocuments.clear()
         bulkDocuments << t2
 
-        Thread.currentThread().sleep(500);
+        Thread.currentThread().sleep(1000);
         
         result = Task.bulkSave(bulkDocuments)
         t2 = Task.get(result[0].id)
