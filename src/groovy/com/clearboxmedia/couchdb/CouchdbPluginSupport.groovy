@@ -169,6 +169,10 @@ public class CouchdbPluginSupport {
         }
 
         metaClass.delete = {->
+            delete(null)
+        }
+
+        metaClass.delete = {Map args = [:] ->
             couchdb.delete getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate)
         }
 
