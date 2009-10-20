@@ -30,12 +30,15 @@ import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
 import org.codehaus.groovy.grails.plugins.DomainClassPluginSupport
 import org.codehaus.groovy.grails.support.SoftThreadLocalMap
 import org.codehaus.groovy.grails.validation.GrailsDomainClassValidator
+import org.codehaus.groovy.grails.web.binding.DataBindingLazyMetaPropertyMap
+import org.codehaus.groovy.grails.web.binding.DataBindingUtils
 import org.jcouchdb.db.Database
 import org.jcouchdb.db.Options
 import org.jcouchdb.document.Attachment
 import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.exception.NotFoundException
 import org.jcouchdb.util.CouchDBUpdater
+import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean
 import org.springframework.context.ApplicationContext
 import org.springframework.validation.BeanPropertyBindingResult
@@ -320,6 +323,19 @@ public class CouchdbPluginSupport {
             domainClass.constrainedProperties
         }
 
+        metaClass.constructor = {Map map ->
+            def instance = ctx.containsBean(domainClass.fullName) ? ctx.getBean(domainClass.fullName) : BeanUtils.instantiateClass(domainClass.clazz)
+            DataBindingUtils.bindObjectToDomainInstance(domainClass, instance, map)
+            DataBindingUtils.assignBidirectionalAssociations(instance, map, domainClass)
+            return instance
+        }
+        metaClass.setProperties = {Object o ->
+            DataBindingUtils.bindObjectToDomainInstance(domainClass, delegate, o)
+        }
+        metaClass.getProperties = {->
+            new DataBindingLazyMetaPropertyMap(delegate)
+        }
+
         metaClass.hasErrors = {-> delegate.errors?.hasErrors() }
 
         def get
@@ -521,10 +537,10 @@ public class CouchdbPluginSupport {
                     options.put(key, value)
 
                 } else if (key == "max") {
-                    options.limit(value)
+                    options.putUnencoded("limit", value)
 
                 } else if (key == "offset") {
-                    options.skip(value)
+                    options.putUnencoded("skip", value)
 
                 } else if (key == "order") {
                     options.descending((value == "desc"))
