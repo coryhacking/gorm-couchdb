@@ -36,6 +36,7 @@ import org.jcouchdb.db.Database
 import org.jcouchdb.db.Options
 import org.jcouchdb.document.Attachment
 import org.jcouchdb.document.DesignDocument
+import org.jcouchdb.document.ValueRow
 import org.jcouchdb.exception.NotFoundException
 import org.jcouchdb.util.CouchDBUpdater
 import org.springframework.beans.BeanUtils
@@ -55,6 +56,17 @@ public class CouchdbPluginSupport {
     static def doWithSpring = {ApplicationContext ctx ->
 
         updateCouchViews(application)
+
+        // extend the jcouchdb ValueRow class to automatically look up properties of the internal value object
+        ValueRow.metaClass.propertyMissing = {String name ->
+            def value = delegate.value
+
+            if (!value[name]) {
+                throw new MissingPropertyException(name)
+            }
+
+            return value[name]
+        }
 
         // register our CouchDomainClass artefacts that weren't already picked up by grails
         application.domainClasses.each {GrailsDomainClass dc ->
