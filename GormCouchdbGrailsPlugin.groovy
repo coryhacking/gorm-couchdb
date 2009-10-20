@@ -56,7 +56,6 @@ class GormCouchdbGrailsPlugin {
 
     def watchedResources = [
             'file:./grails-app/conf/couchdb/views/**',
-            'file:./grails-app/couchdb/**'
     ]
 
     def author = 'Warner Onstine, Cory Hacking'
@@ -82,53 +81,6 @@ A plugin that emulates the behavior of the GORM-Hibernate plugin against a Couch
             //  todo: update just the specific view
             CouchdbPluginSupport.updateCouchViews(application)
 
-        } else if (application.isArtefactOfType(CouchDomainClassArtefactHandler.TYPE, event.source)) {
-            log.debug("CouchDomain class ${event.source} changed. Reloading...")
-
-            def context = event.ctx
-            if (!context) {
-                log.warn("Application context not found. Can't reload.")
-                return
-            }
-
-            def dc = application.addArtefact(CouchDomainClassArtefactHandler.TYPE, event.source)
-
-            def beans = beans {
-                "${dc.fullName}"(dc.getClazz()) {bean ->
-                    bean.singleton = false
-                    bean.autowire = "byName"
-                }
-
-                "${dc.fullName}DomainClass"(MethodInvokingFactoryBean) {
-                    targetObject = ref("grailsApplication", true)
-                    targetMethod = "getArtefact"
-                    arguments = [CouchDomainClassArtefactHandler.TYPE, dc.fullName]
-                }
-
-                "${dc.fullName}PersistentClass"(MethodInvokingFactoryBean) {
-                    targetObject = ref("${dc.fullName}DomainClass")
-                    targetMethod = "getClazz"
-                }
-
-                "${dc.fullName}Validator"(GrailsDomainClassValidator) {
-                    messageSource = ref("messageSource")
-                    domainClass = ref("${dc.fullName}DomainClass")
-                    grailsApplication = ref("grailsApplication", true)
-                }
-            }
-
-            context.registerBeanDefinition("${dc.fullName}", beans.getBeanDefinition("${dc.fullName}"))
-            context.registerBeanDefinition("${dc.fullName}DomainClass", beans.getBeanDefinition("${dc.fullName}DomainClass"))
-            context.registerBeanDefinition("${dc.fullName}PersistentClass", beans.getBeanDefinition("${dc.fullName}PersistentClass"))
-            context.registerBeanDefinition("${dc.fullName}Validator", beans.getBeanDefinition("${dc.fullName}Validator"))
-
-            // add the dynamic methods back to the class
-            CouchdbPluginSupport.doWithDynamicMethods(event.ctx)
         }
     }
-
-    // We may want to just reload the entire context (the way the domain plugin works) instead of just our couch documents.
-    // For now, however, we will reload the controllers and services and see how that goes.
-    def influences = ['controllers', 'services']
-
 }
