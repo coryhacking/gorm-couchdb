@@ -27,7 +27,7 @@ class CouchJsonDateMorpher extends AbstractObjectMorpher {
     private String datePattern
 
     def CouchJsonDateValueProcessor() {
-        datePattern = "yyyy/MM/dd HH:mm:ss Z"
+        datePattern = "yyyy/MM/dd HH:mm:ss.S Z"
     }
 
     def CouchJsonDateMorpher(datePattern) {
