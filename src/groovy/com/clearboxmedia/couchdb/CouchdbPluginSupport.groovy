@@ -59,13 +59,13 @@ public class CouchdbPluginSupport {
 
         // extend the jcouchdb ValueRow class to automatically look up properties of the internal value object
         ValueRow.metaClass.propertyMissing = {String name ->
-            def value = delegate.value
+            HashMap map = delegate.value
 
-            if (!value[name]) {
+            if (map == null || !map.containsKey(name)) {
                 throw new MissingPropertyException(name)
             }
 
-            return value[name]
+            return map.get(name)
         }
 
         // register our CouchDomainClass artefacts that weren't already picked up by grails
@@ -546,25 +546,42 @@ public class CouchdbPluginSupport {
         def options = new Options()
 
         if (o) {
-            o.each {String key, value ->
-                if (key == "key" || key == "startkey" || key == "endkey") {
+            o.each {String key, Object value ->
+                switch (key) {
+                    case "key":
+                    case "startkey":
+                    case "startkey_docid":
+                    case "endkey":
+                    case "endkey_docid":
+                        // keys need to be encoded
+                        options.put(key, value)
+                        break
 
-                    // keys need to be encoded
-                    options.put(key, value)
+                    case "max":
+                    case "limit":
+                        options.putUnencoded("limit", value)
+                        break
 
-                } else if (key == "max") {
-                    options.putUnencoded("limit", value)
+                    case "offset":
+                    case "skip":
+                        options.putUnencoded("skip", value)
+                        break
 
-                } else if (key == "offset") {
-                    options.putUnencoded("skip", value)
+                    case "order":
+                        options.descending((value == "desc"))
+                        break
 
-                } else if (key == "order") {
-                    options.descending((value == "desc"))
+                    case "update":
+                    case "group":
+                    case "stale":
+                    case "reduce":
+                    case "include_docs":
+                        options.putUnencoded(key, value)
+                        break
 
-                } else {
-
-                    // put the rest unencoded
-                    options.putUnencoded(key, value)
+                    default:
+                        // ignore everything else
+                        break
                 }
             }
         }
