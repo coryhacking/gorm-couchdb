@@ -188,7 +188,7 @@ public class CouchdbPluginSupport {
             couchdb.delete getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate)
         }
 
-        metaClass.getAttachment = {Serializable attachmentId ->
+        metaClass.readAttachment = {Serializable attachmentId ->
             return couchdb.getAttachment(getDocumentId(domainClass, delegate), attachmentId.toString())
         }
 
@@ -437,27 +437,51 @@ public class CouchdbPluginSupport {
         JsonConfig jsonConfig = new CouchJsonConfig();
         jsonConfig.setRootClass(dc.clazz);
 
+        def id = json.remove("_id")
+        def version = json.remove("_rev")
+        def attachments = json.remove("_attachments")
+
+        if (dc.type) {
+            json.remove("type")
+        }
+
         def doc = JSONSerializer.toJava(json, jsonConfig);
 
-        def id = dc.getIdentifier()
-        if (id) {
-            doc[id.name] = json['_id']
+        def prop = dc.getIdentifier()
+        if (prop) {
+            doc[prop.name] = id
         }
 
-        def version = dc.getVersion()
-        if (version) {
-            doc[version.name] = json['_rev']
+        prop = dc.getVersion()
+        if (prop) {
+            doc[prop.name] = version
         }
 
-        def att = dc.getAttachments()
-        if (att) {
-            doc[att.name] = json['_attachments']
+        prop = dc.getAttachments()
+        if (prop) {
+            def converted = [:]
+            if (attachments) {
+
+                // Convert the attachments one at a time because json doesn't know what
+                // the type should be.  I'm sure there's another way to do this, but I really
+                // just want to use the standard jcouchdb / svenson libs so we'll wait for
+                // that work instead.
+                jsonConfig.setRootClass(Attachment.class)
+                attachments.each {key, value ->
+                    converted.put(key, JSONSerializer.toJava(value, jsonConfig))
+                }
+            }
+
+            doc[prop.name] = converted
         }
 
         return doc
     }
 
     private static CouchDocument convertToCouchDocument(GrailsApplication application, Object domain) {
+
+        // would be nice to just use the standard jcouchdb/svenson libs but they don't
+        // deal with groovy objects cleanly yet...
         CouchDocument doc = new CouchDocument()
 
         CouchDomainClass dc = (CouchDomainClass) application.getArtefact(CouchDomainClassArtefactHandler.TYPE, domain.getClass().getName())

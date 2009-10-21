@@ -16,8 +16,7 @@
 package org.acme
 
 import com.clearboxmedia.couchdb.CouchEntity
-import com.clearboxmedia.couchdb.CouchId
-import com.clearboxmedia.couchdb.CouchVersion
+import org.jcouchdb.document.Attachment
 
 /**
  *
@@ -35,6 +34,8 @@ class Project {
 
     Date dateCreated
     Date lastUpdated
+
+    Map<String, Attachment> attachments = [:]
 
     static constraints = {
         id nullable: true

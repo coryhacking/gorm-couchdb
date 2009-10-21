@@ -15,13 +15,13 @@
  */
 package com.clearboxmedia.couchdb
 
+import org.acme.Contact
+import org.acme.Contact.Gender
 import org.acme.Project
 import org.acme.Task
 import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.document.DocumentInfo
 import org.jcouchdb.document.View
-import org.acme.Contact
-import org.acme.Contact.Gender
 
 /**
  * @author Warner Onstine, Cory Hacking
@@ -69,7 +69,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertNotNull "should have set dateCreated", p1.dateCreated
         assertNotNull "should have set lastUpdated", p1.lastUpdated
 
-        println "id and revision from saved project is ${p1.id} ${p1.version}"
+        println "id and revision from saved project is ${p1.id}${p1.version}"
 
         def p2 = Project.get(p1.id)
 
@@ -162,7 +162,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         bulkDocuments << t2
 
         Thread.currentThread().sleep(1000);
-        
+
         result = Task.bulkSave(bulkDocuments)
         t2 = Task.get(result[0].id)
 
@@ -190,16 +190,16 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             println info
         }
 
-        result = Project.findByView("openTasks/byName", ["offset":5, "max":10])
+        result = Project.findByView("openTasks/byName", ["offset": 5, "max": 10])
         assertEquals "should have found 10 open tasks", 10, result.size()
-        
+
         result = Project.findByView("openTasks/byName", ['startkey': "task-1", 'endkey': "task-10"])
         assertEquals "should have found 2 open tasks", 2, result.size()
         result.each {info ->
             println info
         }
 
-        def descending = Project.findByView("openTasks/byName", ['startkey': "task-10", 'endkey': "task-1", "order":"desc"])
+        def descending = Project.findByView("openTasks/byName", ['startkey': "task-10", 'endkey': "task-1", "order": "desc"])
         assertEquals "should have found 2 open tasks", descending.size(), 2
         assertEquals "should be in reverse order", result[0].id, descending[1].id
         assertEquals "should be in reverse order", result[1].id, descending[0].id
@@ -260,5 +260,45 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertEquals "contact should be male", c2.gender, Gender.MALE
 
         c.delete()
+    }
+
+    void testAttachments() {
+        def id = "gorm-couchdb-att"
+
+        // get (or create) our test project
+        def p = Project.get(id)
+        if (!p) {
+            p = new Project()
+
+            p.id = id
+        }
+
+        p.name = "A New Test Project w/attachments"
+        p.startDate = new Date()
+        p.save()
+
+        def att = new File("grails-app/conf/DataSource.groovy")
+        p.saveAttachment(att.path, "text", att.newInputStream(), att.length())
+
+        p = Project.get(id)
+        assertEquals "should have one attachment", 1, p.attachments.size()
+
+        def att2 = new File("grails-app/conf/UrlMappings.groovy")
+        p.saveAttachment(att2.path, "text", att2.newInputStream(), att2.length())
+
+        p = Project.get(id)
+        assertEquals "should have two attachments", 2, p.attachments.size()
+        assertNotNull "attachment name should be ${att.path}", p.attachments[att.path]
+        assertNotNull "attachment name should be ${att2.path}", p.attachments[att2.path]
+
+        p.readAttachment(att.path)
+        p.readAttachment(att2.path)
+
+        p.deleteAttachment(att.path)
+
+        p = Project.get(id)
+        assertEquals "should have one attachmens", 1, p.attachments.size()
+
+        p.delete()
     }
 }
