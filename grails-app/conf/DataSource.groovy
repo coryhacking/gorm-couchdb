@@ -1,4 +1,4 @@
-import com.clearboxmedia.couchdb.cfg.CouchDomainConfiguration
+import grails.plugins.couchdb.cfg.CouchDomainConfiguration
 
 dataSource {
     pooled = true

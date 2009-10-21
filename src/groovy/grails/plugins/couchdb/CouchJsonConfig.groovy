@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb
+package grails.plugins.couchdb
 
 import java.sql.Timestamp
 import net.sf.ezmorph.object.DateMorpher

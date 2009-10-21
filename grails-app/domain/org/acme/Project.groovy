@@ -15,7 +15,7 @@
  */
 package org.acme
 
-import com.clearboxmedia.couchdb.CouchEntity
+import grails.plugins.couchdb.CouchEntity
 import org.jcouchdb.document.Attachment
 
 /**

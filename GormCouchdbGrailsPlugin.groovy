@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import com.clearboxmedia.couchdb.*
-import com.clearboxmedia.couchdb.domain.CouchDomainClassArtefactHandler
+import grails.plugins.couchdb.CouchdbPluginSupport
+import grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler
 import org.springframework.core.io.Resource
-import org.springframework.beans.factory.config.MethodInvokingFactoryBean
-import org.codehaus.groovy.grails.validation.GrailsDomainClassValidator
 
 /**
  *
@@ -36,7 +34,7 @@ class GormCouchdbGrailsPlugin {
     def dependsOn = [core: '1.1 > *']
 
     def loadAfter = ['core', 'domainClass', 'hibernate']
-    
+
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
             'grails-app/conf/spring/**',

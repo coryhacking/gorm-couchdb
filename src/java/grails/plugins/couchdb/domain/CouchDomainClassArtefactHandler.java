@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb.domain;
+package grails.plugins.couchdb.domain;
 
-import com.clearboxmedia.couchdb.CouchEntity;
 import org.codehaus.groovy.grails.commons.ArtefactHandlerAdapter;
 import org.codehaus.groovy.grails.commons.GrailsClass;
+
+import grails.plugins.couchdb.CouchEntity;
 
 /**
  * @author Warner Onstine, Cory Hacking

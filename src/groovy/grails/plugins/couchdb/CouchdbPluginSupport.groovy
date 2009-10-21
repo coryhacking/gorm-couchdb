@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb
+package grails.plugins.couchdb
 
-import com.clearboxmedia.couchdb.domain.CouchDomainClass
-import com.clearboxmedia.couchdb.domain.CouchDomainClassArtefactHandler
+import grails.plugins.couchdb.domain.CouchDomainClass
+import grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler
 import net.sf.json.JSON
 import net.sf.json.JSONObject
 import net.sf.json.JSONSerializer

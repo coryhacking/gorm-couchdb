@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb.ast
+package grails.plugins.couchdb.ast
 
-import com.clearboxmedia.couchdb.CouchEntity
-import com.clearboxmedia.couchdb.CouchId
-import com.clearboxmedia.couchdb.CouchVersion
+import grails.plugins.couchdb.CouchEntity
+import grails.plugins.couchdb.CouchId
+import grails.plugins.couchdb.CouchVersion
 import java.lang.reflect.Modifier
 import javax.persistence.Id
 import javax.persistence.Version
@@ -117,7 +117,7 @@ class CouchEntityASTTransformation implements ASTTransformation {
 
         // find the given class property
         // do we need to deal with parent classes???
-        for (PropertyNode pn : classNode.properties) {
+        for (PropertyNode pn: classNode.properties) {
             if (pn.getName().equals(propertyName) && !pn.isPrivate()) {
                 return pn
             }

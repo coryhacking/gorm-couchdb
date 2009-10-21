@@ -13,12 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb.domain;
+package grails.plugins.couchdb.domain;
 
-import com.clearboxmedia.couchdb.CouchAttachments;
-import com.clearboxmedia.couchdb.CouchEntity;
-import com.clearboxmedia.couchdb.CouchId;
-import com.clearboxmedia.couchdb.CouchVersion;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.codehaus.groovy.grails.commons.AbstractGrailsClass;
 import org.codehaus.groovy.grails.commons.GrailsDomainClass;
@@ -30,6 +26,10 @@ import org.codehaus.groovy.grails.validation.metaclass.ConstraintsEvaluatingDyna
 import org.springframework.beans.BeanUtils;
 import org.springframework.validation.Validator;
 
+import grails.plugins.couchdb.CouchAttachments;
+import grails.plugins.couchdb.CouchEntity;
+import grails.plugins.couchdb.CouchId;
+import grails.plugins.couchdb.CouchVersion;
 import grails.util.GrailsNameUtils;
 
 import javax.persistence.Id;
@@ -73,7 +73,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
 
         CouchEntity entityAnnotation = (CouchEntity) clazz.getAnnotation(CouchEntity.class);
         if (entityAnnotation == null) {
-            throw new GrailsDomainException("Class [" + clazz.getName() + "] is not annotated with com.clearboxmedia.couchdb.CouchEntity!");
+            throw new GrailsDomainException("Class [" + clazz.getName() + "] is not annotated with grails.plugins.couchdb.CouchEntity!");
         }
 
         // try to read the "type" annotation property
@@ -306,7 +306,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
             this.name = descriptor.getName();
             this.type = descriptor.getPropertyType();
             this.getter = descriptor.getReadMethod();
-            
+
             try {
                 this.field = domain.getClazz().getDeclaredField(descriptor.getName());
             } catch (NoSuchFieldException e) {

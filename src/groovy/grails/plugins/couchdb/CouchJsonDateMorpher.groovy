@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb
+package grails.plugins.couchdb
 
-import net.sf.json.JsonConfig
-import net.sf.json.processors.JsonValueProcessor
+import net.sf.ezmorph.object.AbstractObjectMorpher
 import org.apache.commons.lang.time.DateFormatUtils
 
 /**
  *
  * @author Warner Onstine, Cory Hacking
  */
-class CouchJsonDateValueProcessor implements JsonValueProcessor {
+class CouchJsonDateMorpher extends AbstractObjectMorpher {
 
     private String datePattern
 
@@ -31,7 +30,7 @@ class CouchJsonDateValueProcessor implements JsonValueProcessor {
         datePattern = "yyyy/MM/dd HH:mm:ss.S Z"
     }
 
-    def CouchJsonDateValueProcessor(datePattern) {
+    def CouchJsonDateMorpher(datePattern) {
         this.datePattern = datePattern;
     }
 
@@ -39,11 +38,7 @@ class CouchJsonDateValueProcessor implements JsonValueProcessor {
         return datePattern;
     }
 
-    Object processArrayValue(Object bean, JsonConfig jsonConfig) {
-        return null
-    }
-
-    Object processObjectValue(String key, Object bean, JsonConfig jsonConfig) {
+    Object processObjectValue(String key, Object bean, jsonConfig) {
         String value = null
 
         if (bean instanceof java.sql.Date) {
@@ -51,9 +46,17 @@ class CouchJsonDateValueProcessor implements JsonValueProcessor {
         }
 
         if (bean instanceof Date) {
-            value = DateFormatUtils.formatUTC((Date) bean, datePattern)
+            value = DateFormatUtils.format((Date) bean, datePattern)
         }
 
         return value
+    }
+
+    Object morph(Object value) {
+        return null;
+    }
+
+    Class morphsTo() {
+        return Date.class
     }
 }

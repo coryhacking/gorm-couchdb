@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb
+package org.acme
 
-import org.acme.Contact
 import org.acme.Contact.Gender
-import org.acme.Project
-import org.acme.Task
 import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.document.DocumentInfo
 import org.jcouchdb.document.View

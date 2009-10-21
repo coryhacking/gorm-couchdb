@@ -15,7 +15,7 @@
  */
 package org.acme
 
-import com.clearboxmedia.couchdb.CouchEntity
+import grails.plugins.couchdb.CouchEntity
 
 /**
  *
@@ -35,6 +35,7 @@ class Contact {
     }
 
     static enum Gender {
+
         MALE, FEMALE
     }
 }

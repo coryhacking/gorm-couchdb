@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb;
+package grails.plugins.couchdb;
 
 import org.codehaus.groovy.transform.GroovyASTTransformationClass;
 
@@ -24,13 +24,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
-
  * @author Warner Onstine, Cory Hacking
  */
 @Target ({ElementType.TYPE})
 @Retention (RetentionPolicy.RUNTIME)
 @Documented
-@GroovyASTTransformationClass ({"com.clearboxmedia.couchdb.ast.CouchEntityASTTransformation"})
+@GroovyASTTransformationClass ({"grails.plugins.couchdb.ast.CouchEntityASTTransformation"})
 public @interface CouchEntity {
 
     String type();

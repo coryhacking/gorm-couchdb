@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.clearboxmedia.couchdb.cfg;
+package grails.plugins.couchdb.cfg;
 
-import com.clearboxmedia.couchdb.domain.CouchDomainClassArtefactHandler;
 import org.codehaus.groovy.grails.commons.GrailsDomainClass;
 import org.codehaus.groovy.grails.orm.hibernate.cfg.DefaultGrailsDomainConfiguration;
 import org.codehaus.groovy.grails.orm.hibernate.cfg.GrailsDomainConfiguration;
+
+import grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler;
 
 /**
  * @author Cory Hacking
