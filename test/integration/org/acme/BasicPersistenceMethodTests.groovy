@@ -111,6 +111,10 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
 
     void testBulkSave() {
         def bulkDocuments = []
+
+        Date firstTaskStartDate
+        Date lastTaskStartDate
+
         def id = "gorm-couchdb"
 
         // get (or create) our test project
@@ -139,6 +143,11 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             t.projectId = p.id
             t.startDate = new Date()
             t.description = "This is the description for task ${i}."
+
+            if (!firstTaskStartDate) {
+                firstTaskStartDate = t.startDate
+            }
+            lastTaskStartDate = t.startDate
 
             bulkDocuments << t
         }
@@ -169,6 +178,9 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertTrue "lastUpdated should be different", !t1.lastUpdated.equals(t2.lastUpdated)
         assertTrue "t2.lastUpdated should be after t1.lastUpdated", t2.lastUpdated.after(t1.lastUpdated)
 
+        // test date finder here
+        result = Task.findByViewAndKeys("openByStartDate", [firstTaskStartDate, lastTaskStartDate])
+        assertTrue "should have found at least 2 (depends upon timing) tasks", result.size() >= 2
     }
 
     void testFind() {

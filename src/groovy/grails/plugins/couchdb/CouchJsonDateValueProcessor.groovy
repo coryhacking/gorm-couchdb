@@ -25,10 +25,12 @@ import org.apache.commons.lang.time.DateFormatUtils
  */
 class CouchJsonDateValueProcessor implements JsonValueProcessor {
 
+    public static final String DATE_PATTERN = "yyyy/MM/dd HH:mm:ss.S Z"
+
     private String datePattern
 
     def CouchJsonDateValueProcessor() {
-        datePattern = "yyyy/MM/dd HH:mm:ss.S Z"
+        datePattern = DATE_PATTERN
     }
 
     def CouchJsonDateValueProcessor(datePattern) {

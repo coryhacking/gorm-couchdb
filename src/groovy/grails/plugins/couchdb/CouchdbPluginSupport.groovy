@@ -22,6 +22,7 @@ import net.sf.json.JSONObject
 import net.sf.json.JSONSerializer
 import net.sf.json.JsonConfig
 import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang.time.DateFormatUtils
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.codehaus.groovy.grails.commons.GrailsApplication
@@ -351,7 +352,8 @@ public class CouchdbPluginSupport {
             if (!view.contains("/") && dc.type) {
                 view = dc.type + "/" + view
             }
-            return couchdb.queryViewByKeys(view, Map.class, keys, o, null).getRows();
+
+            return couchdb.queryViewByKeys(view, Map.class, convertKeys(keys), o, null).getRows();
         }
 
         metaClass.'static'.getDesignDocument = {String id ->
@@ -628,17 +630,17 @@ public class CouchdbPluginSupport {
                     case "endkey":
                     case "endkey_docid":
                         // keys need to be encoded
-                        options.put(key, value)
+                        options.put(key, convertKey(value))
                         break
 
                     case "max":
                     case "limit":
-                        options.putUnencoded("limit", value)
+                        options.put("limit", value)
                         break
 
                     case "offset":
                     case "skip":
-                        options.putUnencoded("skip", value)
+                        options.put("skip", value)
                         break
 
                     case "order":
@@ -650,7 +652,7 @@ public class CouchdbPluginSupport {
                     case "stale":
                     case "reduce":
                     case "include_docs":
-                        options.putUnencoded(key, value)
+                        options.put(key, value)
                         break
 
                     default:
@@ -661,5 +663,28 @@ public class CouchdbPluginSupport {
         }
 
         return options
+    }
+
+    private static List convertKeys(List keys) {
+        def values = []
+        keys.each {key ->
+            values << convertKey(key)
+        }
+
+        return values
+    }
+
+    private static Object convertKey(Object key) {
+        def value = key
+
+        if (value instanceof java.sql.Date) {
+            value = new Date(((java.sql.Date) value).getTime());
+        }
+
+        if (value instanceof Date) {
+            value = DateFormatUtils.formatUTC((Date) key, CouchJsonDateValueProcessor.DATE_PATTERN)
+        }
+
+        return value
     }
 }
