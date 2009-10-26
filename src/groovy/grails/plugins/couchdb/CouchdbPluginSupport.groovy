@@ -303,15 +303,31 @@ public class CouchdbPluginSupport {
         metaClass.'static'.count = {String viewName ->
             def view = viewName
             if (!view) {
-                if (!dc.type) {
-                    throw new Exception()
-                }
-                view = dc.type + "/count"
+                view = "count"
+            }
+            if (!view.contains("/") && dc.type) {
+                view = dc.type + "/" + view
             }
 
             def count = couchdb.queryView(view, Map.class, null, null).getRows()
 
             return (count ? count[0].value : 0) as Long
+        }
+
+        metaClass.'static'.list = {Map o = [:] ->
+            return list(null, o)
+        }
+
+        metaClass.'static'.list = {String viewName, Map o = [:] ->
+            def view = viewName
+            if (!view) {
+                view = "list"
+            }
+            if (!view.contains("/") && dc.type) {
+                view = dc.type + "/" + view
+            }
+
+            return couchdb.queryView(view, Map.class, getOptions(o), null).getRows()
         }
 
         metaClass.'static'.findByView = {String viewName, Map o = [:] ->

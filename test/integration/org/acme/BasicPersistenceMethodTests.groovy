@@ -183,11 +183,17 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             println info
         }
 
-        result = Task.findByView("openByName")
-        assertEquals "should have found 20 open tasks", 20, result.size()
+        result = Task.list()
         result.each {info ->
             println info
         }
+        assertEquals "should have found 20 tasks", 20, result.size()
+
+        result = Task.list([max:10])
+        assertEquals "should have found 10 tasks", 10, result.size()
+
+        result = Task.findByView("openByName")
+        assertEquals "should have found 20 open tasks", 20, result.size()
 
         result = Task.findByView("openByName", ["offset": 5, "max": 10])
         assertEquals "should have found 10 open tasks", 10, result.size()
