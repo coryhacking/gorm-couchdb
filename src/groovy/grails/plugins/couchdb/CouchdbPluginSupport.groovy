@@ -296,12 +296,34 @@ public class CouchdbPluginSupport {
             return couchdb.listDocumentsByUpdateSequence(o, null).getRows()
         }
 
+        metaClass.'static'.count = {->
+            return count(null)
+        }
+
+        metaClass.'static'.count = {String viewName ->
+            def view = viewName
+            if (!view) {
+                if (!dc.type) {
+                    throw new Exception()
+                }
+                view = dc.type + "/count"
+            }
+
+            def count = couchdb.queryView(view, Map.class, null, null).getRows()
+
+            return (count ? count[0].value : 0) as Long
+        }
+
         metaClass.'static'.findByView = {String viewName, Map o = [:] ->
             return findByView(viewName, getOptions(o))
         }
 
         metaClass.'static'.findByView = {String viewName, Options o ->
-            return couchdb.queryView(viewName, Map.class, o, null).getRows()
+            def view = viewName
+            if (!view.contains("/") && dc.type) {
+                view = dc.type + "/" + view
+            }
+            return couchdb.queryView(view, Map.class, o, null).getRows()
         }
 
         metaClass.'static'.findByViewAndKeys = {String viewName, List keys, Map o = [:] ->
@@ -309,12 +331,20 @@ public class CouchdbPluginSupport {
         }
 
         metaClass.'static'.findByViewAndKeys = {String viewName, List keys, Options o ->
-            return couchdb.queryViewByKeys(viewName, Map.class, keys, o, null).getRows();
+            def view = viewName
+            if (!view.contains("/") && dc.type) {
+                view = dc.type + "/" + view
+            }
+            return couchdb.queryViewByKeys(view, Map.class, keys, o, null).getRows();
         }
 
-        metaClass.'static'.getDesignDocument = {Serializable id ->
+        metaClass.'static'.getDesignDocument = {String id ->
             try {
-                return couchdb.getDesignDocument(id.toString())
+                def view = id
+                if (!view && dc.type) {
+                    view = dc.type
+                }
+                return couchdb.getDesignDocument(view)
             } catch (NotFoundException e) {
                 // fall through to return null
             }
@@ -323,6 +353,10 @@ public class CouchdbPluginSupport {
         }
 
         metaClass.'static'.saveDesignDocument = {DesignDocument doc ->
+            if (!doc.id && dc.type) {
+                doc.id = dc.type
+            }
+
             return couchdb.createOrUpdateDocument(doc)
         }
     }

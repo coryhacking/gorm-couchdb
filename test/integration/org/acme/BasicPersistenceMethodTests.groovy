@@ -29,15 +29,15 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
 
     void testDesignDocument() {
 
-        def design = Task.getDesignDocument("tasks")
+        def design = Task.getDesignDocument()
         if (!design) {
-            design = new DesignDocument("tasks");
+            design = new DesignDocument();
         }
 
-        if (!design.views["byName"]) {
+        if (!design.views["allByName"]) {
 
             // add a temporary "open" view
-            design.addView("byName", new View("function(doc) { if (doc.type == 'project-task') { emit(doc.name, null); }}"))
+            design.addView("allByName", new View("function(doc) { if (doc.type == 'project-task') { emit(doc.name, null); }}"))
 
             // save the design document
             Task.saveDesignDocument(design)
@@ -123,6 +123,8 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             p.startDate = new Date()
             p.save()
         }
+        
+        assertEquals "should have 1 project", 1, Project.count()
 
         // update the last updated date and add to our bulk documents
         p.lastUpdated = new Date()
@@ -181,33 +183,32 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             println info
         }
 
-        result = Project.findByView("openTasks/byName")
+        result = Task.findByView("openByName")
         assertEquals "should have found 20 open tasks", 20, result.size()
         result.each {info ->
             println info
         }
 
-        result = Project.findByView("openTasks/byName", ["offset": 5, "max": 10])
+        result = Task.findByView("openByName", ["offset": 5, "max": 10])
         assertEquals "should have found 10 open tasks", 10, result.size()
 
-        result = Project.findByView("openTasks/byName", ['startkey': "task-1", 'endkey': "task-10"])
+        result = Task.findByView("openByName", ['startkey': "task-1", 'endkey': "task-10"])
         assertEquals "should have found 2 open tasks", 2, result.size()
         result.each {info ->
             println info
         }
 
-        def descending = Project.findByView("openTasks/byName", ['startkey': "task-10", 'endkey': "task-1", "order": "desc"])
+        def descending = Task.findByView("openByName", ['startkey': "task-10", 'endkey': "task-1", "order": "desc"])
         assertEquals "should have found 2 open tasks", descending.size(), 2
         assertEquals "should be in reverse order", result[0].id, descending[1].id
         assertEquals "should be in reverse order", result[1].id, descending[0].id
 
-        result = Project.findByViewAndKeys("openTasks/byName", ["task-15"])
+        result = Task.findByViewAndKeys("openByName", ["task-15"])
         assertEquals "should have found 1 open task", 1, result.size()
         result.each {info ->
             println info
             assertEquals "should have found task #15", "task-15", info.key
         }
-
     }
 
     void testBulkDelete() {
