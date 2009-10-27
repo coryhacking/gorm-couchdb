@@ -64,6 +64,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
     private CouchDomainClassProperty version;
     private CouchDomainClassProperty attachments;
     private String type;
+    private String typeFieldName;
     private String designName;
 
     private Map constraints = new HashMap();
@@ -89,6 +90,18 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
 
             // if the type wasn't set, then use the domain class name
             type = clazz.getSimpleName().toLowerCase();
+        }
+
+        // try to read the "type" annotation property
+        try {
+            typeFieldName = entityAnnotation.typeFieldName();
+            if ("".equals(typeFieldName)) {
+                typeFieldName = "type";
+            } else if ("class".equals(typeFieldName) || "metaClass".equals(typeFieldName)) {
+                throw new GrailsDomainException("The CouchEntity annotation parameter [typeFieldName] on Class [" + clazz.getName() + "] cannot be set to 'class' or 'metaClass'.");
+            }
+        } catch (IncompleteAnnotationException ex) {
+            typeFieldName = "type";
         }
 
         // we always want a default design name even if the type is disabled
@@ -204,12 +217,12 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
         return this.type;
     }
 
-    public String getDesignName() {
-        return designName;
+    public String getTypeFieldName() {
+        return this.typeFieldName;
     }
 
-    public void setDesignName(String designName) {
-        this.designName = designName;
+    public String getDesignName() {
+        return designName;
     }
 
     public Map getAssociationMap() {

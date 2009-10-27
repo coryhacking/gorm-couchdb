@@ -32,6 +32,8 @@ import java.lang.annotation.Target;
 @GroovyASTTransformationClass ({"grails.plugins.couchdb.ast.CouchEntityASTTransformation"})
 public @interface CouchEntity {
 
+    String typeFieldName() default "type";
+
     String type();
 
 }

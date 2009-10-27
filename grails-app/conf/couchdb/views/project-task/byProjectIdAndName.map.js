@@ -1,6 +1,6 @@
 
 function(doc) {
-    if (doc.type == 'project-task') {
+    if (doc.meta == 'project-task') {
         emit([doc.projectId, doc.name], null);
     }
 }

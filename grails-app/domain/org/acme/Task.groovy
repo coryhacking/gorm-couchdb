@@ -23,7 +23,7 @@ import grails.plugins.couchdb.CouchVersion
  *
  * @author Warner Onstine, Cory Hacking
  */
-@CouchEntity(type = "project-task")
+@CouchEntity(typeFieldName="meta", type="project-task")
 class Task {
 
     @CouchId

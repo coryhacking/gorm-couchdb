@@ -547,7 +547,7 @@ public class CouchdbPluginSupport {
         def attachments = json.remove("_attachments")
 
         if (dc.type) {
-            json.remove("type")
+            json.remove(dc.typeFieldName)
         }
 
         def doc = JSONSerializer.toJava(json, jsonConfig);
@@ -595,7 +595,7 @@ public class CouchdbPluginSupport {
             // set the document type if it is enabled set it first, so that it can be
             //  overridden by an actual type property if there is one...
             if (dc.type) {
-                doc["type"] = dc.type
+                doc[dc.typeFieldName] = dc.type
             }
 
             // set all of the persistant properties.
