@@ -27,6 +27,38 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
 
     static transactional = false
 
+    void testInjection() {
+        def id = "gorm-test-id"
+        def version = "1-22ba1c6f98a7a0981fe4b716a1153e16"
+
+        // test that the id & version WERE injected into the Project class
+        def p = new Project()
+        p.id = id
+        p.version = version
+
+        assertTrue "Project id should be a string", p.id instanceof String
+        assertTrue "Project version should be a string", p.version instanceof String
+
+        assertEquals "Project id should be ${id}", id, p.id
+        assertEquals "Project version should be ${version}", version, p.version
+
+        // test that the id & version were not injected in (or were removed from) the Task class
+        def t = new Task()
+        try {
+            t.id = id
+            fail "the injected id field should have been removed from the Task class"
+        } catch (Exception e) {
+            assertTrue "should have thrown a MissingPropertyException", e instanceof MissingPropertyException
+        }
+
+        try {
+            t.version = version
+            fail "the injected version field should have been removed from the Task class"
+        } catch (Exception e) {
+            assertTrue "should have thrown a MissingPropertyException", e instanceof MissingPropertyException
+        }
+    }
+
     void testDesignDocument() {
 
         def design = Task.getDesignDocument()
