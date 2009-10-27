@@ -646,7 +646,7 @@ public class CouchdbPluginSupport {
 
         String host = ds?.host ?: "localhost"
         Integer port = ds?.port ?: 5984
-        String database = ds?.database ?: ""
+        String database = ds?.database ?: application.metadata["app.name"]
         String username = ds?.username ?: ""
         String password = ds?.password ?: ""
 
