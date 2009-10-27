@@ -115,6 +115,7 @@ public class CouchdbPluginSupport {
 
             addInstanceMethods(application, domainClass, ctx, db)
             addStaticMethods(application, domainClass, ctx, db)
+            addDynamicFinderSupport(application, domainClass, ctx, db)
 
             addValidationMethods(application, domainClass, ctx)
 
@@ -211,7 +212,7 @@ public class CouchdbPluginSupport {
         def domainClass = dc
         def couchdb = db
 
-        metaClass.'static'.get = {Serializable docId ->
+        metaClass.static.get = {Serializable docId ->
             try {
                 // read the json document from the database
                 def json = couchdb.getDocument(JSONObject.class, docId.toString())
@@ -228,19 +229,19 @@ public class CouchdbPluginSupport {
         }
 
         // Foo.exists(1)
-        metaClass.'static'.exists = {Serializable docId ->
+        metaClass.static.exists = {Serializable docId ->
             get(docId) != null
         }
 
-        metaClass.'static'.delete = {Serializable docId, String version ->
+        metaClass.static.delete = {Serializable docId, String version ->
             couchdb.delete docId.toString(), version
         }
 
-        metaClass.'static'.bulkSave = {List documents ->
+        metaClass.static.bulkSave = {List documents ->
             return bulkSave(documents, false)
         }
 
-        metaClass.'static'.bulkSave = {List documents, Boolean allOrNothing ->
+        metaClass.static.bulkSave = {List documents, Boolean allOrNothing ->
             def couchDocuments = []
 
             documents.each {doc ->
@@ -250,11 +251,11 @@ public class CouchdbPluginSupport {
             return couchdb.bulkCreateDocuments(couchDocuments, allOrNothing)
         }
 
-        metaClass.'static'.bulkDelete = {List documents ->
+        metaClass.static.bulkDelete = {List documents ->
             return bulkDelete(documents, false)
         }
 
-        metaClass.'static'.bulkDelete = {List documents, boolean allOrNothing ->
+        metaClass.static.bulkDelete = {List documents, boolean allOrNothing ->
             def couchDocuments = new ArrayList()
 
             documents.each {doc ->
@@ -265,49 +266,49 @@ public class CouchdbPluginSupport {
             return couchdb.bulkDeleteDocuments(couchDocuments, allOrNothing)
         }
 
-        metaClass.'static'.getAttachment = {Serializable docId, String attachmentId ->
+        metaClass.static.getAttachment = {Serializable docId, String attachmentId ->
             return couchdb.getAttachment(docId.toString(), attachmentId)
         }
 
-        metaClass.'static'.saveAttachment = {Serializable docId, String version, String attachmentId, String contentType, byte[] data ->
+        metaClass.static.saveAttachment = {Serializable docId, String version, String attachmentId, String contentType, byte[] data ->
             return couchdb.createAttachment(docId.toString(), version, attachmentId, contentType, data)
         }
 
-        metaClass.'static'.saveAttachment = {Serializable docId, String version, String attachmentId, String contentType, InputStream is, long length ->
+        metaClass.static.saveAttachment = {Serializable docId, String version, String attachmentId, String contentType, InputStream is, long length ->
             return couchdb.createAttachment(docId.toString(), version, attachmentId, contentType, is, length)
         }
 
-        metaClass.'static'.deleteAttachment = {Serializable docId, String version, String attachmentId ->
+        metaClass.static.deleteAttachment = {Serializable docId, String version, String attachmentId ->
             return couchdb.deleteAttachment(docId.toString(), version, attachmentId)
         }
 
-        metaClass.'static'.findAll = {Map o = [:] ->
+        metaClass.static.findAll = {Map o = [:] ->
             return findAll(getOptions(o))
         }
 
-        metaClass.'static'.findAll = {Options o ->
+        metaClass.static.findAll = {Options o ->
             return couchdb.listDocuments(o, null).getRows()
         }
 
-        metaClass.'static'.findAllByUpdateSequence = {Map o = [:] ->
+        metaClass.static.findAllByUpdateSequence = {Map o = [:] ->
             return findAllByUpdateSequence(getOptions(o))
         }
 
-        metaClass.'static'.findAllByUpdateSequence = {Options o ->
+        metaClass.static.findAllByUpdateSequence = {Options o ->
             return couchdb.listDocumentsByUpdateSequence(o, null).getRows()
         }
 
-        metaClass.'static'.count = {->
+        metaClass.static.count = {->
             return count(null)
         }
 
-        metaClass.'static'.count = {String viewName ->
+        metaClass.static.count = {String viewName ->
             def view = viewName
             if (!view) {
                 view = "count"
             }
-            if (!view.contains("/") && dc.type) {
-                view = dc.type + "/" + view
+            if (!view.contains("/")) {
+                view = domainClass.designName + "/" + view
             }
 
             def count = couchdb.queryView(view, Map.class, null, null).getRows()
@@ -315,52 +316,52 @@ public class CouchdbPluginSupport {
             return (count ? count[0].value : 0) as Long
         }
 
-        metaClass.'static'.list = {Map o = [:] ->
+        metaClass.static.list = {Map o = [:] ->
             return list(null, o)
         }
 
-        metaClass.'static'.list = {String viewName, Map o = [:] ->
+        metaClass.static.list = {String viewName, Map o = [:] ->
             def view = viewName
             if (!view) {
                 view = "list"
             }
-            if (!view.contains("/") && dc.type) {
-                view = dc.type + "/" + view
+            if (!view.contains("/")) {
+                view = domainClass.designName + "/" + view
             }
 
             return couchdb.queryView(view, Map.class, getOptions(o), null).getRows()
         }
 
-        metaClass.'static'.findByView = {String viewName, Map o = [:] ->
-            return findByView(viewName, getOptions(o))
+        metaClass.static.queryView = {String viewName, Map o = [:] ->
+            return queryView(viewName, getOptions(o))
         }
 
-        metaClass.'static'.findByView = {String viewName, Options o ->
+        metaClass.static.queryView = {String viewName, Options o ->
             def view = viewName
-            if (!view.contains("/") && dc.type) {
-                view = dc.type + "/" + view
+            if (!view.contains("/")) {
+                view = domainClass.designName + "/" + view
             }
             return couchdb.queryView(view, Map.class, o, null).getRows()
         }
 
-        metaClass.'static'.findByViewAndKeys = {String viewName, List keys, Map o = [:] ->
-            return findByViewAndKeys(viewName, keys, getOptions(o));
+        metaClass.static.queryViewByKeys = {String viewName, List keys, Map o = [:] ->
+            return queryViewByKeys(viewName, keys, getOptions(o));
         }
 
-        metaClass.'static'.findByViewAndKeys = {String viewName, List keys, Options o ->
+        metaClass.static.queryViewByKeys = {String viewName, List keys, Options o ->
             def view = viewName
-            if (!view.contains("/") && dc.type) {
-                view = dc.type + "/" + view
+            if (!view.contains("/")) {
+                view = domainClass.designName + "/" + view
             }
 
             return couchdb.queryViewByKeys(view, Map.class, convertKeys(keys), o, null).getRows();
         }
 
-        metaClass.'static'.getDesignDocument = {String id ->
+        metaClass.static.getDesignDocument = {String id ->
             try {
                 def view = id
-                if (!view && dc.type) {
-                    view = dc.type
+                if (!view) {
+                    view = domainClass.designName
                 }
                 return couchdb.getDesignDocument(view)
             } catch (NotFoundException e) {
@@ -370,12 +371,64 @@ public class CouchdbPluginSupport {
             return null
         }
 
-        metaClass.'static'.saveDesignDocument = {DesignDocument doc ->
-            if (!doc.id && dc.type) {
-                doc.id = dc.type
+        metaClass.static.saveDesignDocument = {DesignDocument doc ->
+            if (!doc.id) {
+                doc.id = domainClass.designName
             }
 
             return couchdb.createOrUpdateDocument(doc)
+        }
+    }
+
+    private static addDynamicFinderSupport(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
+        def metaClass = dc.metaClass
+        def domainClass = dc
+        def couchdb = db
+
+        // This adds basic dynamic finder support.
+        metaClass.static.methodMissing = {String methodName, args ->
+
+            // find methods (can have search keys)
+            def matcher = (methodName =~ /^(find)(\w+)$/)
+            if (!matcher.matches()) {
+
+                // list methods (just contains options)
+                matcher = (methodName =~ /^(list)(\w+)$/)
+                matcher.reset()
+                if (!matcher.matches()) {
+
+                    // count methods (only options)
+                    matcher = (methodName =~ /^(count)(\w+)$/)
+                    matcher.reset()
+                    if (!matcher.matches()) {
+                        throw new MissingMethodException(methodName, delegate, args, true)
+                    }
+                }
+            }
+
+            // set the view to everything after the method type (change first char to lowerCase).
+            def method = matcher.group(1)
+            def view = matcher.group(2)
+            view = domainClass.designName + "/" + view.substring(0, 1).toLowerCase() + view.substring(1)
+
+            // options should be the last map argument.
+            args = args.toList()
+            def options = (args.size() > 0 && args[args.size() - 1] instanceof Map) ? args.remove(args.size() - 1) : [:]
+
+            // assume that the list of keys (if any) is everything else
+            def keys = (method == "find") ? (args ?: []) : null
+
+            // call the query and return the results
+            if (keys) {
+                return couchdb.queryViewByKeys(view, Map.class, convertKeys(keys), getOptions(options), null).getRows();
+            } else {
+                def results = couchdb.queryView(view, Map.class, getOptions(options), null).getRows()
+                if (method == "count") {
+                    return (results ? results[0].value : 0) as Long
+                } else {
+                    return results
+                }
+            }
         }
     }
 
@@ -383,7 +436,7 @@ public class CouchdbPluginSupport {
         def metaClass = dc.metaClass
         def domainClass = dc
 
-        metaClass.'static'.getConstraints = {->
+        metaClass.static.getConstraints = {->
             domainClass.constrainedProperties
         }
 

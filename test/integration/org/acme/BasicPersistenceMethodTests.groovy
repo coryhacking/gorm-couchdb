@@ -112,8 +112,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
     void testBulkSave() {
         def bulkDocuments = []
 
-        Date firstTaskStartDate
-        Date lastTaskStartDate
+        Date startDate
 
         def id = "gorm-couchdb"
 
@@ -144,10 +143,9 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             t.startDate = new Date()
             t.description = "This is the description for task ${i}."
 
-            if (!firstTaskStartDate) {
-                firstTaskStartDate = t.startDate
+            if (!startDate) {
+                startDate = t.startDate
             }
-            lastTaskStartDate = t.startDate
 
             bulkDocuments << t
         }
@@ -179,8 +177,8 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertTrue "t2.lastUpdated should be after t1.lastUpdated", t2.lastUpdated.after(t1.lastUpdated)
 
         // test date finder here
-        result = Task.findByViewAndKeys("openByStartDate", [firstTaskStartDate, lastTaskStartDate])
-        assertTrue "should have found at least 2 (depends upon timing) tasks", result.size() >= 2
+        result = Task.findOpenTasksByStartDate(startDate)
+        assertTrue "should have found at least 1 task (depends upon timing)", result.size() >= 1
     }
 
     void testFind() {
@@ -204,29 +202,31 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         result = Task.list([max:10])
         assertEquals "should have found 10 tasks", 10, result.size()
 
-        result = Task.findByView("openByName")
+        result = Task.listOpenTasksByName(["order":"desc"])
         assertEquals "should have found 20 open tasks", 20, result.size()
 
-        result = Task.findByView("openByName", ["offset": 5, "max": 10])
+        assertEquals "should have counted 20 open tasks", 20, Task.countOpenTasks()
+
+        result = Task.findOpenTasksByName(["offset": 5, "max": 10])
         assertEquals "should have found 10 open tasks", 10, result.size()
 
-        result = Task.findByView("openByName", ['startkey': "task-1", 'endkey': "task-10"])
+        result = Task.findOpenTasksByName(['startkey': "task-1", 'endkey': "task-10"])
         assertEquals "should have found 2 open tasks", 2, result.size()
         result.each {info ->
             println info
         }
 
-        def descending = Task.findByView("openByName", ['startkey': "task-10", 'endkey': "task-1", "order": "desc"])
+        def descending = Task.queryView("openTasksByName", ['startkey': "task-10", 'endkey': "task-1", "order": "desc"])
         assertEquals "should have found 2 open tasks", descending.size(), 2
         assertEquals "should be in reverse order", result[0].id, descending[1].id
         assertEquals "should be in reverse order", result[1].id, descending[0].id
 
-        result = Task.findByViewAndKeys("openByName", ["task-15"])
-        assertEquals "should have found 1 open task", 1, result.size()
-        result.each {info ->
-            println info
-            assertEquals "should have found task #15", "task-15", info.key
-        }
+        result = Task.findOpenTasksByName("task-15", "task-16", "task-17", ["order":"desc"])
+        assertEquals "should have found 3 open tasks", 3, result.size()
+        assertEquals "should have found task #15", "task-15", result[0].key
+
+        result = Task.findByProjectIdAndName(["gorm-couchdb", "task-1"])
+        assertEquals "should have found 'gorm-couchdb-task-1'", "gorm-couchdb-task-1", result[0].id
     }
 
     void testBulkDelete() {

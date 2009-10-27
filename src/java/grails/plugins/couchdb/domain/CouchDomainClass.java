@@ -64,6 +64,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
     private CouchDomainClassProperty version;
     private CouchDomainClassProperty attachments;
     private String type;
+    private String designName;
 
     private Map constraints = new HashMap();
     private Validator validator;
@@ -89,6 +90,9 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
             // if the type wasn't set, then use the domain class name
             type = clazz.getSimpleName().toLowerCase();
         }
+
+        // we always want a default design name even if the type is disabled
+        designName = (type != null) ? type : clazz.getSimpleName().toLowerCase();
 
         PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(clazz);
         evaluateClassProperties(descriptors);
@@ -198,6 +202,14 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
 
     public String getType() {
         return this.type;
+    }
+
+    public String getDesignName() {
+        return designName;
+    }
+
+    public void setDesignName(String designName) {
+        this.designName = designName;
     }
 
     public Map getAssociationMap() {
