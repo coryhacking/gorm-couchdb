@@ -1,4 +1,4 @@
-<plugin name='gorm-couchdb' version='0.1' grailsVersion='1.1.1 &gt; *'>
+<plugin name='gorm-couchdb' version='0.2' grailsVersion='1.1.1 &gt; *'>
   <author>Warner Onstine, Cory Hacking</author>
   <title>Grails CouchDB Plugin</title>
   <description>\
