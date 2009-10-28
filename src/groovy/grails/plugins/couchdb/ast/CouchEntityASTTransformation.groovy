@@ -25,6 +25,8 @@ import org.apache.commons.lang.StringUtils
 import org.apache.commons.logging.Log
 import org.apache.commons.logging.LogFactory
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.AnnotatedNode
+import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.PropertyNode
@@ -33,21 +35,19 @@ import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
-import org.codehaus.groovy.ast.AnnotationNode
-import org.codehaus.groovy.ast.AnnotatedNode
 
 /**
  *
  * @author Cory Hacking
  */
-@GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
+@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class CouchEntityASTTransformation implements ASTTransformation {
 
     private static final Log log = LogFactory.getLog(CouchEntityASTTransformation.class)
 
     private static final String IDENTITY = GrailsDomainClassProperty.IDENTITY
     private static final String VERSION = GrailsDomainClassProperty.VERSION
-    
+
     private static final ClassNode COUCH_ENTITY = new ClassNode(CouchEntity)
 
     private static final ClassNode COUCH_ID = new ClassNode(CouchId)
