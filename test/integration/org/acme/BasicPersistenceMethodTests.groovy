@@ -158,7 +158,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             p.startDate = new Date()
             p.save()
         }
-        
+
         assertEquals "should have 1 project", 1, Project.count()
 
         // update the last updated date and add to our bulk documents
@@ -220,21 +220,16 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             println info
         }
 
-        result = Project.findAllByUpdateSequence()
-        result.each {info ->
-            println info
-        }
-
         result = Task.list()
         result.each {info ->
             println info
         }
         assertEquals "should have found 20 tasks", 20, result.size()
 
-        result = Task.list([max:10])
+        result = Task.list([max: 10])
         assertEquals "should have found 10 tasks", 10, result.size()
 
-        result = Task.listOpenTasksByName(["order":"desc"])
+        result = Task.listOpenTasksByName(["order": "desc"])
         assertEquals "should have found 20 open tasks", 20, result.size()
 
         assertEquals "should have counted 20 open tasks", 20, Task.countOpenTasks()
@@ -253,7 +248,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertEquals "should be in reverse order", result[0].id, descending[1].id
         assertEquals "should be in reverse order", result[1].id, descending[0].id
 
-        result = Task.findOpenTasksByName("task-15", "task-16", "task-17", ["order":"desc"])
+        result = Task.findOpenTasksByName("task-15", "task-16", "task-17", ["order": "desc"])
         assertEquals "should have found 3 open tasks", 3, result.size()
         assertEquals "should have found task #15", "task-15", result[0].key
 
@@ -331,7 +326,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         p = Project.get(id)
         assertEquals "should have one attachment", 1, p.attachments.size()
 
-        def att2 = new File("grails-app/conf/UrlMappings.groovy")
+        def att2 = new File("test/integration/org/acme/BasicPersistenceMethodTests.groovy")
         p.saveAttachment(att2.path, "text", att2.newInputStream(), att2.length())
 
         p = Project.get(id)
@@ -348,5 +343,24 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertEquals "should have one attachmens", 1, p.attachments.size()
 
         p.delete()
+    }
+
+    void testUnicode() {
+        def id = "unicode-test-正規"
+
+        def p = Project.get(id)
+        if (!p) {
+            p = new Project()
+            p.id = id
+        }
+
+        p.name = "»» 正規表達式 ... \u6B63"
+
+        p.save()
+
+        def p2 = Project.get(id)
+        assertEquals "Unicode name should be the same", p.name, p2.name
+
+        p2.delete()
     }
 }

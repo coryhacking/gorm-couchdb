@@ -290,14 +290,6 @@ public class CouchdbPluginSupport {
             return couchdb.listDocuments(o, null).getRows()
         }
 
-        metaClass.static.findAllByUpdateSequence = {Map o = [:] ->
-            return findAllByUpdateSequence(getOptions(o))
-        }
-
-        metaClass.static.findAllByUpdateSequence = {Options o ->
-            return couchdb.listDocumentsByUpdateSequence(o, null).getRows()
-        }
-
         metaClass.static.count = {->
             return count(null)
         }
