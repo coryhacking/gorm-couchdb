@@ -69,7 +69,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         if (!design.views["allByName"]) {
 
             // add a temporary "open" view
-            design.addView("allByName", new View("function(doc) { if (doc.type == 'project-task') { emit(doc.name, null); }}"))
+            design.addView("allByName", new View("function(doc) { if (doc.meta == 'project-task') { emit(doc.name, null); }}"))
 
             // save the design document
             Task.saveDesignDocument(design)
@@ -174,6 +174,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
             t.projectId = p.id
             t.startDate = new Date()
             t.description = "This is the description for task ${i}."
+            t.estimatedHours = i
 
             if (!startDate) {
                 startDate = t.startDate
@@ -216,13 +217,12 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
     void testFind() {
 
         def result = Project.findAll()
-        result.each {info ->
-            println info
-        }
 
         result = Task.list()
         result.each {info ->
             println info
+            assertTrue "startDate should be a Date object", info.startDate instanceof Date
+            assertTrue "estimatedHours should be an Integer object", info.estimatedHours instanceof Integer
         }
         assertEquals "should have found 20 tasks", 20, result.size()
 
