@@ -25,7 +25,7 @@ import org.apache.commons.lang.time.DateFormatUtils
  */
 class CouchJsonDateValueProcessor implements JsonValueProcessor {
 
-    public static final String DATE_PATTERN = "yyyy/MM/dd HH:mm:ss.S Z"
+    public static final String DATE_PATTERN = "yyyy/MM/dd HH:mm:ss Z"
 
     private String datePattern
 
