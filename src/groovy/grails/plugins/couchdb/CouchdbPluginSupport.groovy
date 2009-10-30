@@ -59,29 +59,19 @@ public class CouchdbPluginSupport {
 
         updateCouchViews(application)
 
-        ValueRow.metaClass.domainClass = null
-
         // extend the jcouchdb ValueRow class to automatically look up properties of the internal value object
         ValueRow.metaClass.propertyMissing = {String name ->
-            HashMap map = delegate.value
+            Map map = delegate.value
 
             if (map == null || !map.containsKey(name)) {
                 throw new MissingPropertyException(name)
             }
 
             // look for a property of the same name in our domain class
-            def prop = domainClass.getPropertyByName(name)
-            def value = map.get(name)
-            if (prop && value != null && !value.class.isAssignableFrom(prop.type)) {
-                if (value == "") {
-                    value = null
-                } else {
-                    value = CouchJsonConfig.morph(prop.type, value)
-                    if (value != null && !value.class.isAssignableFrom(prop.type)) {
-                        value = null
-                    }
-                }
-
+            Object value = map.get(name)
+            Class type = map.get('_domainClass')?.getPropertyByName(name)?.type
+            if (value != null && type != null && !(type instanceof String) && !value.class.isAssignableFrom(type)) {
+                value = CouchJsonConfig.morph(type, value)
                 map.put(name, value)
             }
             return value
@@ -341,7 +331,7 @@ public class CouchdbPluginSupport {
                 view = domainClass.designName + "/" + view
             }
             ViewResult result = couchdb.queryView(view, Map.class, getOptions(o), null)
-            result.getRows().each {row -> row.domainClass = dc}
+            result.getRows().each {row -> row.value?.put('_domainClass', dc)}
 
             return result.getRows()
         }
@@ -353,7 +343,7 @@ public class CouchdbPluginSupport {
             }
 
             ViewResult result = couchdb.queryViewByKeys(view, Map.class, convertKeys(keys), getOptions(o), null)
-            result.getRows().each {row -> row.domainClass = dc}
+            result.getRows().each {row -> row.value?.put('_domainClass', dc)}
 
             return result.getRows()
         }
