@@ -21,7 +21,6 @@ import net.sf.json.JSON
 import net.sf.json.JSONObject
 import net.sf.json.JSONSerializer
 import net.sf.json.JsonConfig
-import net.sf.json.util.JSONUtils
 import org.apache.commons.lang.StringUtils
 import org.apache.commons.lang.time.DateFormatUtils
 import org.apache.http.auth.AuthScope
@@ -72,11 +71,20 @@ public class CouchdbPluginSupport {
 
             // look for a property of the same name in our domain class
             def prop = domainClass.getPropertyByName(name)
-            if (prop.type != String.class) {
-                return JSONUtils.getMorpherRegistry().morph(prop.type, map.get(name))
-            }
+            def value = map.get(name)
+            if (prop && value != null && !value.class.isAssignableFrom(prop.type)) {
+                if (value == "") {
+                    value = null
+                } else {
+                    value = CouchJsonConfig.morph(prop.type, value)
+                    if (value != null && !value.class.isAssignableFrom(prop.type)) {
+                        value = null
+                    }
+                }
 
-            return map.get(name)
+                map.put(name, value)
+            }
+            return value
         }
 
         // register our CouchDomainClass artefacts that weren't already picked up by grails

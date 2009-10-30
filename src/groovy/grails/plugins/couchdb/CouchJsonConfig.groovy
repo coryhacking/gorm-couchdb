@@ -37,6 +37,10 @@ public class CouchJsonConfig extends JsonConfig {
 
     }
 
+    public static Object morph(Class target, Object value) {
+        JSONUtils.getMorpherRegistry().morph(target, value)
+    }
+
     public CouchJsonConfig() {
 
         // register our json date processors
