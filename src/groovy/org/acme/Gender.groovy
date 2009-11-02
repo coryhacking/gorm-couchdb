@@ -15,24 +15,12 @@
  */
 package org.acme
 
-import grails.plugins.couchdb.CouchEntity
-
 /**
  *
- * @author Warner Onstine, Cory Hacking
+ * @author Cory Hacking
  */
-@CouchEntity
-class Contact {
+public enum Gender {
 
-    String name
-    String company
-    Address address = new Address()
-    Gender gender
+    MALE, FEMALE
 
-    static constraints = {
-        company nullable: true
-        gender nullable: true
-    }
 }
-
-

@@ -15,7 +15,6 @@
  */
 package org.acme
 
-import org.acme.Contact.Gender
 import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.document.DocumentInfo
 import org.jcouchdb.document.View
