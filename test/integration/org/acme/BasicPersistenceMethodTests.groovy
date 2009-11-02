@@ -325,6 +325,8 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
 
         p = Project.get(id)
         assertEquals "should have one attachment", 1, p.attachments.size()
+        assertEquals "contentType should be 'text'", 'text', p.attachments[att.path].contentType
+        assertEquals "length should be '${att.length()}", att.length(), p.attachments[att.path].length
 
         def att2 = new File("test/integration/org/acme/BasicPersistenceMethodTests.groovy")
         p.saveAttachment(att2.path, "text", att2.newInputStream(), att2.length())

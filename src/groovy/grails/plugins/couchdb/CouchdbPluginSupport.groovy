@@ -274,7 +274,7 @@ public class CouchdbPluginSupport {
             return couchdb.bulkDeleteDocuments(couchDocuments, allOrNothing)
         }
 
-        metaClass.static.getAttachment = {Serializable docId, String attachmentId ->
+        metaClass.static.readAttachment = {Serializable docId, String attachmentId ->
             return couchdb.getAttachment(docId.toString(), attachmentId)
         }
 
@@ -562,9 +562,15 @@ public class CouchdbPluginSupport {
                 // the type should be.  I'm sure there's another way to do this, but I really
                 // just want to use the standard jcouchdb / svenson libs so we'll wait for
                 // that work instead.
-                jsonConfig.setRootClass(Attachment.class)
-                attachments.each {key, value ->
-                    converted.put(key, JSONSerializer.toJava(value, jsonConfig))
+                attachments.each {String key, value ->
+                    Attachment att = new Attachment()
+
+                    att.stub = true
+                    att.contentType = value["content_type"]
+                    att.length = value['length']
+                    att.revPos = value['revpos']
+
+                    converted.put(key, att)
                 }
             }
 
