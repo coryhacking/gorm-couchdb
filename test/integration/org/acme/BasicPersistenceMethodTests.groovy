@@ -56,6 +56,10 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         } catch (Exception e) {
             assertTrue "should have thrown a MissingPropertyException", e instanceof MissingPropertyException
         }
+
+        t.taskId = "gorm-couchdb"
+        assertTrue "toString() should return the class name and taskId", (t.class.getName() + " : ${t.taskId}") == t.toString()
+
     }
 
     void testDesignDocument() {

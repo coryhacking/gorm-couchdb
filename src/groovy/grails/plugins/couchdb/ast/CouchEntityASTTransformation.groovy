@@ -29,7 +29,13 @@ import org.codehaus.groovy.ast.AnnotatedNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
+import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.PropertyNode
+import org.codehaus.groovy.ast.expr.ConstantExpression
+import org.codehaus.groovy.ast.expr.GStringExpression
+import org.codehaus.groovy.ast.expr.VariableExpression
+import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
@@ -75,9 +81,9 @@ class CouchEntityASTTransformation implements ASTTransformation {
         if (nodes) {
             // look to see if the identity field was injected and not one of our annotated nodes
             if (identity && identity.field.lineNumber < 0 && !nodes.findAll {FieldNode fieldNode -> fieldNode.name == identity.name}) {
+                fixupToStringMethod(classNode, nodes[0])
                 removeProperty(classNode, identity.name)
             }
-
         } else {
 
             // if we don't have an annotated id then look for a plain id field
@@ -95,6 +101,25 @@ class CouchEntityASTTransformation implements ASTTransformation {
                 log.debug("Adding property [" + IDENTITY + "] to class [" + classNode.getName() + "]")
             }
             classNode.addProperty(IDENTITY, Modifier.PUBLIC, new ClassNode(String.class), null, null, null)
+        }
+    }
+
+    private void fixupToStringMethod(ClassNode classNode, FieldNode idNode) {
+
+        MethodNode method = classNode.getDeclaredMethod("toString", [] as Parameter[]);
+        if (method != null && method.lineNumber < 0 && (method.isPublic() || method.isProtected()) && !method.isAbstract()) {
+            GStringExpression ge = new GStringExpression(classNode.getName() + ' : ${' + idNode.name + '}');
+            ge.addString(new ConstantExpression(classNode.getName() + " : "));
+            ge.addValue(new VariableExpression(idNode.name));
+
+            method.variableScope.removeReferencedClassVariable("id")
+            method.variableScope.putReferencedClassVariable(idNode)
+
+            method.code = new ReturnStatement(ge);
+
+            if (log.isDebugEnabled()) {
+                log.debug("Changing method [toString()] on class [" + classNode.getName() + "] to use id field [" + id + "]");
+            }
         }
     }
 
