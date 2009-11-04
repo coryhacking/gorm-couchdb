@@ -16,20 +16,21 @@
 package org.acme
 
 import grails.plugins.couchdb.CouchEntity
-import grails.plugins.couchdb.CouchId
-import grails.plugins.couchdb.CouchVersion
+import javax.persistence.Id
+import javax.persistence.Transient
+import javax.persistence.Version
 
 /**
  *
  * @author Warner Onstine, Cory Hacking
  */
-@CouchEntity(typeFieldName="meta", type="project-task")
+@CouchEntity(typeFieldName = "meta", type = "project-task")
 class Task {
 
-    @CouchId
+    @Id
     String taskId
 
-    @CouchVersion
+    @Version
     String taskVersion
 
     String projectId
@@ -45,8 +46,14 @@ class Task {
     Date dateCreated
     Date lastUpdated
 
+    @Transient
+    String pass = "pass"
+
     static constraints = {
         projectId blank: false
         name blank: false
+        actualHours nullable: true
+        startDate nullable: true
+        completionDate nullable: true
     }
 }

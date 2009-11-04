@@ -92,6 +92,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         def p1 = new Project(name: "InConcert")
 
         p1.startDate = new Date()
+        p1.pass = "transient test"
 
         p1.save()
 
@@ -108,6 +109,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertNotNull "should have retrieved a project", p2
         assertEquals "project ids should be equal", p1.id, p2.id
         assertEquals "project revisions should be equal", p1.version, p2.version
+        assertTrue "the project field 'pass' is transient and should not have been saved", p1.pass != p2.pass
 
         Thread.currentThread().sleep(1000);
 
@@ -115,7 +117,24 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertTrue "lastUpdated should be different", !p1.lastUpdated.equals(p2.lastUpdated)
         assertTrue "p2.lastUpdated should be after p1.lastUpdated", p1.lastUpdated.before(p2.lastUpdated)
 
+        def t1 = new Task()
+        t1.taskId = "${p2.id}-task"
+        t1.name = "task"
+        t1.projectId = p2.id
+        t1.startDate = new Date()
+        t1.description = "This is the description."
+        t1.estimatedHours = 5
+        t1.pass = "transient test"
+
+        t1.save()
+
+        def t2 = Task.get(t1.taskId)
+        assertNotNull "should have retrieved a task", t2
+        assertTrue "the task field 'pass' is transient and should not have been saved", t1.pass != t2.pass
+
         p2.delete()
+        t2.delete()
+
     }
 
     void testUpdateAndDelete() {

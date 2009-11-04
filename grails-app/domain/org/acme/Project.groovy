@@ -37,6 +37,10 @@ class Project {
 
     Map<String, Attachment> attachments = [:]
 
+    String pass = "pass"
+
+    static transients = ["pass"]
+
     static constraints = {
         id nullable: true
         version nullable: true

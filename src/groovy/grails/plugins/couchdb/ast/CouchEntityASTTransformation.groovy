@@ -81,7 +81,11 @@ class CouchEntityASTTransformation implements ASTTransformation {
         if (nodes) {
             // look to see if the identity field was injected and not one of our annotated nodes
             if (identity && identity.field.lineNumber < 0 && !nodes.findAll {FieldNode fieldNode -> fieldNode.name == identity.name}) {
+
+                // change the injected toString() method to use the proper id field
                 fixupToStringMethod(classNode, nodes[0])
+
+                // remove the old identifier
                 removeProperty(classNode, identity.name)
             }
         } else {

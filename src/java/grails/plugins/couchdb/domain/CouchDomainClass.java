@@ -33,6 +33,7 @@ import grails.plugins.couchdb.CouchVersion;
 import grails.util.GrailsNameUtils;
 
 import javax.persistence.Id;
+import javax.persistence.Transient;
 import javax.persistence.Version;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.IncompleteAnnotationException;
@@ -339,8 +340,8 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
             }
 
             this.persistent = checkPersistence(descriptor);
-            List transientProps = getTransients(domainClass);
-            checkIfTransient(transientProps);
+
+            checkIfTransient();
         }
 
         private boolean checkPersistence(PropertyDescriptor descriptor) {
@@ -351,20 +352,26 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
         }
 
         // Checks whether this property is transient... copied from DefaultGrailsDomainClassProperty.
-        private void checkIfTransient(List transientProps) {
-            if (transientProps != null) {
-                for (Iterator i = transientProps.iterator(); i.hasNext();) {
+        private void checkIfTransient() {
+            if (isAnnotatedWith(Transient.class)) {
+                this.persistent = false;
 
-                    // make sure its a string otherwise ignore. Note: Again maybe a warning?
-                    Object currentObj = i.next();
-                    if (currentObj instanceof String) {
-                        String propertyName = (String) currentObj;
+            } else {
+                List transientProps = getTransients(domainClass);
+                if (transientProps != null) {
+                    for (Iterator i = transientProps.iterator(); i.hasNext();) {
 
-                        // if the property name is on the not persistant list
-                        // then set persistant to false
-                        if (propertyName.equals(this.name)) {
-                            this.persistent = false;
-                            break;
+                        // make sure its a string otherwise ignore. Note: Again maybe a warning?
+                        Object currentObj = i.next();
+                        if (currentObj instanceof String) {
+                            String propertyName = (String) currentObj;
+
+                            // if the property name is on the not persistant list
+                            // then set persistant to false
+                            if (propertyName.equals(this.name)) {
+                                this.persistent = false;
+                                break;
+                            }
                         }
                     }
                 }
