@@ -316,13 +316,12 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
 
         private Class ownerClass;
         private PropertyDescriptor descriptor;
-        private Field propertyField;
+        private Field field;
         private String name;
         private Class type;
         private GrailsDomainClass domainClass;
         private Method getter;
         private boolean persistent = true;
-        private Field field;
         private boolean identity = false;
 
         public CouchDomainClassProperty(GrailsDomainClass domain, PropertyDescriptor descriptor) {
@@ -532,10 +531,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
         }
 
         public boolean isAnnotatedWith(Class annotation) {
-            if (field == null) {
-                return false;
-            }
-            return field.getAnnotation(annotation) != null;
+            return (field != null && field.getAnnotation(annotation) != null) || (getter != null && getter.getAnnotation(annotation) != null);
         }
 
         // grails 1.2 GrailsDomainClass
