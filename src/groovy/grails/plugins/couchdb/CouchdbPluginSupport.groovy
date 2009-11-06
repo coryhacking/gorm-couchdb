@@ -17,12 +17,9 @@ package grails.plugins.couchdb
 
 import grails.plugins.couchdb.domain.CouchDomainClass
 import grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler
-import net.sf.json.JSON
-import net.sf.json.JSONObject
-import net.sf.json.JSONSerializer
-import net.sf.json.JsonConfig
+import grails.plugins.couchdb.json.JsonConverterUtils
+import grails.plugins.couchdb.json.JsonDateConverter
 import org.apache.commons.lang.StringUtils
-import org.apache.commons.lang.time.DateFormatUtils
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.codehaus.groovy.grails.commons.GrailsApplication
@@ -46,6 +43,10 @@ import org.springframework.beans.factory.config.MethodInvokingFactoryBean
 import org.springframework.context.ApplicationContext
 import org.springframework.validation.BeanPropertyBindingResult
 import org.springframework.validation.Errors
+import org.svenson.JSON
+import org.svenson.JSONConfig
+import org.svenson.JSONParser
+import org.svenson.converter.DefaultTypeConverterRepository
 
 /**
  *
@@ -61,6 +62,7 @@ public class CouchdbPluginSupport {
 
         // extend the jcouchdb ValueRow class to automatically look up properties of the internal value object
         ValueRow.metaClass.propertyMissing = {String name ->
+
             Map map = delegate.value
 
             if (map == null || !map.containsKey(name)) {
@@ -69,9 +71,9 @@ public class CouchdbPluginSupport {
 
             // look for a property of the same name in our domain class
             Object value = map.get(name)
-            Class type = map.get('_domainClass')?.getPropertyByName(name)?.type
-            if (value != null && type != null && !(type instanceof String) && !value.class.isAssignableFrom(type)) {
-                value = CouchJsonConfig.morph(type, value)
+            Class type = map.get('__domainClass')?.getPropertyByName(name)?.type
+            if (value && type && !(type instanceof String) && !value.getClass().isAssignableFrom(type)) {
+                value = JsonConverterUtils.fromJSON(type, value)
                 map.put(name, value)
             }
             return value
@@ -166,23 +168,7 @@ public class CouchdbPluginSupport {
 
             // todo: add support for failOnError:true in grails 1.2 (GRAILS-4343)
             if (validate()) {
-
-                // create our couch document that can be serialized to json properly
-                CouchDocument doc = convertToCouchDocument(application, autoTimeStamp(application, delegate))
-
-                // save the document
-                couchdb.createOrUpdateDocument doc
-
-                // set the return id and revision on the domain object
-                def id = domainClass.getIdentifier()
-                if (id) {
-                    delegate[id.name] = doc.id
-                }
-
-                def rev = domainClass.getVersion()
-                if (rev) {
-                    delegate[rev.name] = doc.revision
-                }
+                couchdb.createOrUpdateDocument autoTimeStamp(application, delegate)
 
                 return delegate
             }
@@ -222,12 +208,7 @@ public class CouchdbPluginSupport {
 
         metaClass.static.get = {Serializable docId ->
             try {
-                // read the json document from the database
-                def json = couchdb.getDocument(JSONObject.class, docId.toString())
-
-                // convert it to our domain object
-                // todo: make sure that the type matches the appropriate domain class or look it up
-                return convertToDomainObject(domainClass, json)
+                return couchdb.getDocument(domainClass.clazz, docId.toString())
 
             } catch (NotFoundException e) {
                 // fall through to return null
@@ -250,13 +231,11 @@ public class CouchdbPluginSupport {
         }
 
         metaClass.static.bulkSave = {List documents, Boolean allOrNothing ->
-            def couchDocuments = []
-
             documents.each {doc ->
-                couchDocuments << convertToCouchDocument(application, autoTimeStamp(application, doc))
+                autoTimeStamp(application, doc)
             }
 
-            return couchdb.bulkCreateDocuments(couchDocuments, allOrNothing)
+            return couchdb.bulkCreateDocuments(documents, allOrNothing)
         }
 
         metaClass.static.bulkDelete = {List documents ->
@@ -264,14 +243,7 @@ public class CouchdbPluginSupport {
         }
 
         metaClass.static.bulkDelete = {List documents, boolean allOrNothing ->
-            def couchDocuments = new ArrayList()
-
-            documents.each {doc ->
-                couchDocuments << convertToCouchDocument(application, doc)
-
-            }
-
-            return couchdb.bulkDeleteDocuments(couchDocuments, allOrNothing)
+            return couchdb.bulkDeleteDocuments(documents, allOrNothing)
         }
 
         metaClass.static.readAttachment = {Serializable docId, String attachmentId ->
@@ -331,7 +303,7 @@ public class CouchdbPluginSupport {
                 view = domainClass.designName + "/" + view
             }
             ViewResult result = couchdb.queryView(view, Map.class, getOptions(o), null)
-            result.getRows().each {row -> row.value?.put('_domainClass', dc)}
+            result.getRows().each {row -> row.value?.put('__domainClass', dc)}
 
             return result.getRows()
         }
@@ -343,7 +315,7 @@ public class CouchdbPluginSupport {
             }
 
             ViewResult result = couchdb.queryViewByKeys(view, Map.class, convertKeys(keys), getOptions(o), null)
-            result.getRows().each {row -> row.value?.put('_domainClass', dc)}
+            result.getRows().each {row -> row.value?.put('__domainClass', dc)}
 
             return result.getRows()
         }
@@ -529,94 +501,6 @@ public class CouchdbPluginSupport {
         return domain
     }
 
-    private static Object convertToDomainObject(CouchDomainClass dc, JSON json) {
-        JsonConfig jsonConfig = new CouchJsonConfig();
-        jsonConfig.setRootClass(dc.clazz);
-
-        def id = json.remove("_id")
-        def version = json.remove("_rev")
-        def attachments = json.remove("_attachments")
-
-        if (dc.type) {
-            json.remove(dc.typeFieldName)
-        }
-
-        def doc = JSONSerializer.toJava(json, jsonConfig);
-
-        def prop = dc.getIdentifier()
-        if (prop) {
-            doc[prop.name] = id
-        }
-
-        prop = dc.getVersion()
-        if (prop) {
-            doc[prop.name] = version
-        }
-
-        prop = dc.getAttachments()
-        if (prop) {
-            def converted = [:]
-            if (attachments) {
-
-                // Convert the attachments one at a time because json doesn't know what
-                // the type should be.  I'm sure there's another way to do this, but I really
-                // just want to use the standard jcouchdb / svenson libs so we'll wait for
-                // that work instead.
-                attachments.each {String key, value ->
-                    Attachment att = new Attachment()
-
-                    att.stub = true
-                    att.contentType = value["content_type"]
-                    att.length = value['length']
-                    att.revPos = value['revpos']
-
-                    converted.put(key, att)
-                }
-            }
-
-            doc[prop.name] = converted
-        }
-
-        return doc
-    }
-
-    private static CouchDocument convertToCouchDocument(GrailsApplication application, Object domain) {
-
-        // would be nice to just use the standard jcouchdb/svenson libs but they don't
-        // deal with groovy objects cleanly yet...
-        CouchDocument doc = new CouchDocument()
-
-        CouchDomainClass dc = (CouchDomainClass) application.getArtefact(CouchDomainClassArtefactHandler.TYPE, domain.getClass().getName())
-        if (dc) {
-
-            // set the document type if it is enabled set it first, so that it can be
-            //  overridden by an actual type property if there is one...
-            if (dc.type) {
-                doc[dc.typeFieldName] = dc.type
-            }
-
-            // set all of the persistant properties.
-            dc.getPersistantProperties().each() {prop ->
-                doc[prop.name] = domain[prop.name]
-            }
-
-            // set the document id, revision, and attachments... do it last so that the
-            //  annotated properties override any other ones that may be there.  Especially
-            //  needed if hibernate is already enabled as id and version fields are created,
-            //  but may not be used.
-            doc.id = getDocumentId(dc, domain)
-            doc.revision = getDocumentVersion(dc, domain)
-            doc.attachments = getDocumentAttachments(dc, domain)
-
-        } else {
-
-            // todo: what do we do with an object we don't know how to convert?
-
-        }
-
-        return doc
-    }
-
     private static String getDocumentId(CouchDomainClass dc, Object domain) {
         def id = dc.getIdentifier()
         if (id) {
@@ -665,6 +549,25 @@ public class CouchdbPluginSupport {
             db.server.setCredentials(authScope, credentials)
         }
 
+        DefaultTypeConverterRepository typeConverterRepository = new DefaultTypeConverterRepository();
+        JsonDateConverter dateConverter = new JsonDateConverter()
+        typeConverterRepository.addTypeConverter(dateConverter);
+
+        JSON generator = new JSON();
+        generator.setIgnoredProperties(Arrays.asList("metaClass"));
+        generator.setTypeConverterRepository(typeConverterRepository);
+        generator.registerTypeConversion(java.util.Date.class, dateConverter);
+        generator.registerTypeConversion(java.sql.Date.class, dateConverter);
+        generator.registerTypeConversion(java.sql.Timestamp.class, dateConverter);
+
+        JSONParser parser = new JSONParser();
+        parser.setTypeConverterRepository(typeConverterRepository);
+        parser.registerTypeConversion(java.util.Date.class, dateConverter);
+        parser.registerTypeConversion(java.sql.Date.class, dateConverter);
+        parser.registerTypeConversion(java.sql.Timestamp.class, dateConverter);
+
+        db.jsonConfig = new JSONConfig(generator, parser);
+
         return db
     }
 
@@ -680,7 +583,7 @@ public class CouchdbPluginSupport {
                     case "endkey":
                     case "endkey_docid":
                         // keys need to be encoded
-                        options.put(key, convertKey(value))
+                        options.put(key, JsonConverterUtils.toJSON(value))
                         break
 
                     case "max":
@@ -718,23 +621,9 @@ public class CouchdbPluginSupport {
     private static List convertKeys(List keys) {
         def values = []
         keys.each {key ->
-            values << convertKey(key)
+            values << JsonConverterUtils.toJSON(key)
         }
 
         return values
-    }
-
-    private static Object convertKey(Object key) {
-        def value = key
-
-        if (value instanceof java.sql.Date) {
-            value = new Date(((java.sql.Date) value).getTime());
-        }
-
-        if (value instanceof Date) {
-            value = DateFormatUtils.formatUTC((Date) key, CouchJsonDateValueProcessor.DATE_PATTERN)
-        }
-
-        return value
     }
 }

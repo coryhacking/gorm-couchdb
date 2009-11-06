@@ -41,6 +41,8 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         assertEquals "Project id should be ${id}", id, p.id
         assertEquals "Project version should be ${version}", version, p.version
 
+        assertEquals "project type should return 'project'", "project", p.type
+
         // test that the id & version were not injected in (or were removed from) the Task class
         def t = new Task()
         try {
@@ -60,6 +62,7 @@ public class BasicPersistenceMethodTests extends GroovyTestCase {
         t.taskId = "gorm-couchdb"
         assertTrue "toString() should return the class name and taskId", (t.class.getName() + " : ${t.taskId}") == t.toString()
 
+        assertEquals "task meta should return the 'project-task", "project-task", t.meta
     }
 
     void testDesignDocument() {
