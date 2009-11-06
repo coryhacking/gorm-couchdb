@@ -346,6 +346,17 @@ class CouchEntityASTTransformation implements ASTTransformation {
                 if (setter != null) {
                     setter.addAnnotations(annotations)
                 }
+
+                // remove the JSON annotations on the field
+                for (Iterator it = field.annotations.iterator(); it.hasNext();) {
+                    AnnotationNode node = (AnnotationNode) it.next()
+                    if (JSON_PROPERTY.equals(node.getClassNode()) ||
+                            JSON_TYPE_HINT.equals(node.getClassNode()) ||
+                            JSON_CONVERTER.equals(node.getClassNode())) {
+
+                        it.remove()
+                    }
+                }
             }
         }
     }
@@ -356,7 +367,7 @@ class CouchEntityASTTransformation implements ASTTransformation {
         if (!annotations.size()) {
             AnnotationNode annotation = new AnnotationNode(JSON_PROPERTY)
             annotation.runtimeRetention = true
-            annotation.allowedTargets = AnnotationNode.FIELD_TARGET | AnnotationNode.METHOD_TARGET
+            annotation.allowedTargets = AnnotationNode.METHOD_TARGET
             owner.addAnnotation(annotation)
 
             annotations = owner.getAnnotations(JSON_PROPERTY)
@@ -373,7 +384,7 @@ class CouchEntityASTTransformation implements ASTTransformation {
         if (!annotations.size()) {
             AnnotationNode annotation = new AnnotationNode(JSON_TYPE_HINT)
             annotation.runtimeRetention = true
-            annotation.allowedTargets = AnnotationNode.FIELD_TARGET | AnnotationNode.METHOD_TARGET
+            annotation.allowedTargets = AnnotationNode.METHOD_TARGET
             owner.addAnnotation(annotation)
 
             annotations = owner.getAnnotations(JSON_TYPE_HINT)

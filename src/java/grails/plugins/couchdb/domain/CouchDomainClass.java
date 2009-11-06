@@ -16,13 +16,14 @@
 package grails.plugins.couchdb.domain;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.codehaus.groovy.grails.commons.AbstractGrailsClass;
 import org.codehaus.groovy.grails.commons.GrailsDomainClass;
 import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty;
 import org.codehaus.groovy.grails.commons.GrailsDomainConfigurationUtil;
 import org.codehaus.groovy.grails.exceptions.GrailsDomainException;
 import org.codehaus.groovy.grails.validation.ConstrainedProperty;
-import org.codehaus.groovy.grails.validation.metaclass.ConstraintsEvaluatingDynamicProperty;
 import org.springframework.beans.BeanUtils;
 import org.springframework.validation.Validator;
 
@@ -35,6 +36,7 @@ import grails.util.GrailsNameUtils;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 import javax.persistence.Version;
+import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.IncompleteAnnotationException;
 import java.lang.reflect.Field;
@@ -54,6 +56,8 @@ import java.util.Set;
  * @author Warner Onstine, Cory Hacking
  */
 public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomainClass {
+
+    private static final Log log = LogFactory.getLog(CouchDomainClass.class);
 
     private Map<String, GrailsDomainClassProperty> propertyMap = new HashMap<String, GrailsDomainClassProperty>();
     private GrailsDomainClassProperty[] propertiesArray;
@@ -110,7 +114,13 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
 
         PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(clazz);
         evaluateClassProperties(descriptors);
-        evaluateConstraints();
+
+        // process the constraints
+        try {
+            this.constraints = GrailsDomainConfigurationUtil.evaluateConstraints(getReference().getWrappedInstance(), this.persistentPropertyArray);
+        } catch (IntrospectionException e) {
+            log.error("Error reading class [" + getClazz() + "] constraints: " + e.getMessage(), e);
+        }
 
     }
 
@@ -180,10 +190,6 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
         propertiesArray = propertyMap.values().toArray(new GrailsDomainClassProperty[propertyMap.size()]);
         persistentPropertyArray = persistentProperties.values().toArray(new GrailsDomainClassProperty[persistentProperties.size()]);
 
-    }
-
-    private void evaluateConstraints() {
-        this.constraints = (Map) new ConstraintsEvaluatingDynamicProperty(getPersistentProperties()).get(getReference().getWrappedInstance());
     }
 
     public boolean isOwningClass(Class domainClass) {
@@ -283,15 +289,19 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
     }
 
     public void refreshConstraints() {
-        this.constraints = (Map) new ConstraintsEvaluatingDynamicProperty(getPersistentProperties()).get(getReference().getWrappedInstance());
+        try {
+            this.constraints = GrailsDomainConfigurationUtil.evaluateConstraints(getReference().getWrappedInstance(), this.persistentPropertyArray);
 
-        // Embedded components have their own ComponentDomainClass
-        // instance which won't be refreshed by the application.
-        // So, we have to do it here.
-        for (GrailsDomainClassProperty property : this.persistentPropertyArray) {
-            if (property.isEmbedded()) {
-                property.getComponent().refreshConstraints();
+            // Embedded components have their own ComponentDomainClass
+            // instance which won't be refreshed by the application.
+            // So, we have to do it here.
+            for (GrailsDomainClassProperty property : this.persistentPropertyArray) {
+                if (property.isEmbedded()) {
+                    property.getComponent().refreshConstraints();
+                }
             }
+        } catch (IntrospectionException e) {
+            log.error("Error reading class [" + getClazz() + "] constraints: " + e.getMessage(), e);
         }
     }
 
