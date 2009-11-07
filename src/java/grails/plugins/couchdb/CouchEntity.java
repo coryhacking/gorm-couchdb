@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
 @Target ({ElementType.TYPE})
 @Retention (RetentionPolicy.RUNTIME)
 @Documented
-@GroovyASTTransformationClass ({"grails.plugins.couchdb.ast.CouchEntityASTTransformation"})
+@GroovyASTTransformationClass ({"org.codehaus.groovy.grails.plugins.couchdb.ast.CouchEntityASTTransformation"})
 public @interface CouchEntity {
 
     String typeFieldName() default "type";

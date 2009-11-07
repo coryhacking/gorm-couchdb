@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package grails.plugins.couchdb.json;
+package org.codehaus.groovy.grails.plugins.couchdb.json;
 
 import org.svenson.converter.TypeConverter;
 

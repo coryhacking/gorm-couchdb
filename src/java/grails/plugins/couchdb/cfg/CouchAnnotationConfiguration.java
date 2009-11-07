@@ -18,8 +18,7 @@ package grails.plugins.couchdb.cfg;
 import org.codehaus.groovy.grails.commons.GrailsDomainClass;
 import org.codehaus.groovy.grails.orm.hibernate.cfg.GrailsAnnotationConfiguration;
 import org.codehaus.groovy.grails.orm.hibernate.cfg.GrailsDomainConfiguration;
-
-import grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler;
+import org.codehaus.groovy.grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler;
 
 /**
  * @author Cory Hacking

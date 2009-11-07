@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import grails.plugins.couchdb.CouchdbPluginSupport
-import grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler
+import org.codehaus.groovy.grails.plugins.couchdb.CouchdbPluginSupport
+import org.codehaus.groovy.grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler
 import org.springframework.core.io.Resource
 
 /**

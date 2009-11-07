@@ -13,12 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package grails.plugins.couchdb
+package org.codehaus.groovy.grails.plugins.couchdb
 
-import grails.plugins.couchdb.domain.CouchDomainClass
-import grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler
-import grails.plugins.couchdb.json.JsonConverterUtils
-import grails.plugins.couchdb.json.JsonDateConverter
 import org.apache.commons.lang.StringUtils
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
@@ -26,6 +22,10 @@ import org.codehaus.groovy.grails.commons.GrailsApplication
 import org.codehaus.groovy.grails.commons.GrailsDomainClass
 import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
 import org.codehaus.groovy.grails.plugins.DomainClassPluginSupport
+import org.codehaus.groovy.grails.plugins.couchdb.domain.CouchDomainClass
+import org.codehaus.groovy.grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler
+import org.codehaus.groovy.grails.plugins.couchdb.json.JsonConverterUtils
+import org.codehaus.groovy.grails.plugins.couchdb.json.JsonDateConverter
 import org.codehaus.groovy.grails.support.SoftThreadLocalMap
 import org.codehaus.groovy.grails.validation.GrailsDomainClassValidator
 import org.codehaus.groovy.grails.web.binding.DataBindingLazyMetaPropertyMap
