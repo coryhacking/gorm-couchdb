@@ -39,6 +39,10 @@ eventCompileStart = {target ->
     // make sure that our ast transformation and other classes get compiled first
     if (grailsAppName == "gorm-couchdb") {
 
+        // don't need to do this more than once
+        if (getBinding().variables.containsKey("_gorm_couchdb_compile_called")) return
+            _gorm_couchdb_compile_called = true
+
         ant.sequential {
             echo "Compiling gorm-couchdb plugin..."
             
