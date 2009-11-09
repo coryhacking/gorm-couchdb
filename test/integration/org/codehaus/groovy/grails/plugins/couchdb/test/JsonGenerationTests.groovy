@@ -13,9 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.acme
+package org.codehaus.groovy.grails.plugins.couchdb.test
+
+import org.acme.Contact
+import org.acme.Gender
+import org.acme.Project
+import org.acme.Task
 
 /**
+ *  Tests to ensure that the domain object is being translated into the correct JSON.
  *
  * @author Cory Hacking
  */
@@ -46,7 +52,7 @@ class JsonGenerationTests extends GroovyTestCase {
     void testProject() {
 
         // predefined json string for a project
-        String json = "{\"_attachments\":{},\"dateCreated\":null,\"frequency\":\"frequency\",\"_id\":\"26b5811b3701c30c75d11f9a412103fa\",\"lastUpdated\":null,\"name\":\"test project\",\"startDate\":\"3909\\/12\\/01 16:15:30 +0000\",\"type\":\"project\",\"_rev\":\"2-ba19afa3cf78e7350202cf0c095c9aa4\"}"
+        String json = "{\"_attachments\":{},\"dateCreated\":null,\"frequency\":\"frequency\",\"_id\":\"26b5811b3701c30c75d11f9a412103fa\",\"lastUpdated\":null,\"name\":\"test project\",\"startDate\":\"2009\\/12\\/01 09:15:30 +0000\",\"type\":\"project\",\"_rev\":\"2-ba19afa3cf78e7350202cf0c095c9aa4\"}"
 
         def project = new Project()
 
@@ -55,7 +61,7 @@ class JsonGenerationTests extends GroovyTestCase {
         project.version = "2-ba19afa3cf78e7350202cf0c095c9aa4"
 
         project.name = "test project"
-        project.startDate = new Date(2009, 10, 31, 9, 15, 30)
+        project.startDate = getGMTDate()
         project.frequency = "frequency"
 
         assertEquals "project toJSON() should have returned the predefined string", json, project.toJSON()
@@ -64,7 +70,7 @@ class JsonGenerationTests extends GroovyTestCase {
     void testTask() {
 
         // predefined json string for a task
-        String json = "{\"actualHours\":null,\"completionDate\":null,\"dateCreated\":null,\"description\":\"This is the description for the task.\",\"estimatedHours\":5,\"lastUpdated\":null,\"meta\":\"project-task\",\"name\":\"test task\",\"projectId\":\"project-id\",\"startDate\":\"3909\\/12\\/01 16:15:30 +0000\",\"_id\":\"26b5811b3701c30c75d11f9a412103fa\",\"_rev\":\"2-ba19afa3cf78e7350202cf0c095c9aa4\"}"
+        String json = "{\"actualHours\":null,\"completionDate\":null,\"dateCreated\":null,\"description\":\"This is the description for the task.\",\"estimatedHours\":5,\"lastUpdated\":null,\"meta\":\"project-task\",\"name\":\"test task\",\"projectId\":\"project-id\",\"startDate\":\"2009\\/12\\/01 09:15:30 +0000\",\"_id\":\"26b5811b3701c30c75d11f9a412103fa\",\"_rev\":\"2-ba19afa3cf78e7350202cf0c095c9aa4\"}"
 
         def task = new Task()
 
@@ -74,10 +80,19 @@ class JsonGenerationTests extends GroovyTestCase {
 
         task.name = "test task"
         task.projectId = "project-id"
-        task.startDate = new Date(2009, 10, 31, 9, 15, 30)
+        task.startDate = getGMTDate()
         task.description = "This is the description for the task."
         task.estimatedHours = 5
 
         assertEquals "task toJSON() should have returned the predefined string", json, task.toJSON()
+    }
+
+    private Date getGMTDate() {
+
+        // get a date in GMT so the tests don't fail in any default timezone
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
+        cal.set(2009, 10, 31, 9, 15, 30)
+
+        return cal.getTime()
     }
 }
