@@ -345,6 +345,10 @@ public class CouchdbPluginSupport {
 
             return couchdb.createOrUpdateDocument(doc)
         }
+
+        metaClass.static.deleteDesignDocument = {DesignDocument doc ->
+            return couchdb.delete(doc)
+        }
     }
 
     private static addDynamicFinderSupport(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
