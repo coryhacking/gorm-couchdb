@@ -199,6 +199,10 @@ public class CouchdbPluginSupport {
         metaClass.deleteAttachment = {Serializable attachmentId ->
             return couchdb.deleteAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString())
         }
+
+        metaClass.toJSON = {->
+            return db.jsonConfig.getJsonGenerator().forValue(delegate);
+        }
     }
 
     private static addStaticMethods(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
