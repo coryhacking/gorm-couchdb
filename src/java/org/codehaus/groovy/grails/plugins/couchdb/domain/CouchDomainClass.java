@@ -36,7 +36,6 @@ import grails.util.GrailsNameUtils;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 import javax.persistence.Version;
-import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.IncompleteAnnotationException;
 import java.lang.reflect.Field;
@@ -118,7 +117,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
         // process the constraints
         try {
             this.constraints = GrailsDomainConfigurationUtil.evaluateConstraints(getReference().getWrappedInstance(), this.persistentPropertyArray);
-        } catch (IntrospectionException e) {
+        } catch (Exception e) {
             log.error("Error reading class [" + getClazz() + "] constraints: " + e.getMessage(), e);
         }
 
@@ -300,7 +299,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
                     property.getComponent().refreshConstraints();
                 }
             }
-        } catch (IntrospectionException e) {
+        } catch (Exception e) {
             log.error("Error reading class [" + getClazz() + "] constraints: " + e.getMessage(), e);
         }
     }
