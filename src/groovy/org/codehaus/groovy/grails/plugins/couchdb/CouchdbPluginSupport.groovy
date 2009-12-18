@@ -71,10 +71,12 @@ public class CouchdbPluginSupport {
 
             // look for a property of the same name in our domain class
             Object value = map.get(name)
-            Class type = map.get('__domainClass')?.getPropertyByName(name)?.type
-            if (value && type && !(type instanceof String) && !value.getClass().isAssignableFrom(type)) {
-                value = JsonConverterUtils.fromJSON(type, value)
-                map.put(name, value)
+            if (value) {
+                Class type = map.get('__domainClass')?.getPropertyByName(name)?.type
+                if (type && !(type instanceof String) && !value.getClass().isAssignableFrom(type)) {
+                    value = JsonConverterUtils.fromJSON(type, value)
+                    map.put(name, value)
+                }
             }
             return value
         }
