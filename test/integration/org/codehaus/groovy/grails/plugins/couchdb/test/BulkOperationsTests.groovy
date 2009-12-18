@@ -125,7 +125,9 @@ class BulkOperationsTests extends GroovyTestCase {
         result = Task.findOpenTasksByName(['startkey': "task-1", 'endkey': "task-10"])
         assertEquals "should have found 2 open tasks", 2, result.size()
         result.each {info ->
-            println info
+            assertNotNull "task name should not be null", info.name
+            assertNotNull "task startDate should not be null", info.startDate
+            assertTrue "task start date should be a date", info.startDate instanceof Date
         }
 
         def descending = Task.queryView("openTasksByName", ['startkey': "task-10", 'endkey': "task-1", "order": "desc"])
