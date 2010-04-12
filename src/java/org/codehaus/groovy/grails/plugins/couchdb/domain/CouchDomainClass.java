@@ -199,6 +199,11 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
         return propertiesArray;
     }
 
+	/**
+	 * Returns all of the persistant properties of the domain class
+	 * @return The domain class' persistant properties
+     * @deprecated Use #getPersistentProperties instead
+	 */
     public GrailsDomainClassProperty[] getPersistantProperties() {
         return getPersistentProperties();
     }

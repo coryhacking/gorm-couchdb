@@ -63,22 +63,30 @@ public class CouchdbPluginSupport {
         // extend the jcouchdb ValueRow class to automatically look up properties of the internal value object
         ValueRow.metaClass.propertyMissing = {String name ->
 
-            Map map = delegate.value
+			// only look if the value is a Map; which should happen unless the view
+			// emit doesn't contain a named parameters, e.g. emit(doc._id, 1)
+			if (delegate.value instanceof Map) {
+				Map map = delegate.value
 
-            if (map == null || !map.containsKey(name)) {
-                throw new MissingPropertyException(name)
-            }
+				if (!map.containsKey(name)) {
+					throw new MissingPropertyException(name)
+				}
 
-            // look for a property of the same name in our domain class
-            Object value = map.get(name)
-            if (value) {
-                Class type = map.get('__domainClass')?.getPropertyByName(name)?.type
-                if (type && !(type instanceof String) && !value.getClass().isAssignableFrom(type)) {
-                    value = JsonConverterUtils.fromJSON(type, value)
-                    map.put(name, value)
-                }
-            }
-            return value
+				// look for a property of the same name in our domain class
+				Object value = map.get(name)
+				if (value) {
+					Class type = map.get('__domainClass')?.getPropertyByName(name)?.type
+					if (type && !(type instanceof String) && !value.getClass().isAssignableFrom(type)) {
+						value = JsonConverterUtils.fromJSON(type, value)
+						map.put(name, value)
+					}
+				}
+
+				return value
+
+			} else {
+				throw new MissingPropertyException(name)
+			}
         }
 
         // register our CouchDomainClass artefacts that weren't already picked up by grails
@@ -309,7 +317,11 @@ public class CouchdbPluginSupport {
                 view = domainClass.designName + "/" + view
             }
             ViewResult result = couchdb.queryView(view, Map.class, getOptions(o), null)
-            result.getRows().each {row -> row.value?.put('__domainClass', dc)}
+            result.getRows().each {row ->
+				if (row.value instanceof Map) {
+					row.value?.put('__domainClass', dc)
+				}
+			}
 
             return result.getRows()
         }
@@ -321,7 +333,11 @@ public class CouchdbPluginSupport {
             }
 
             ViewResult result = couchdb.queryViewByKeys(view, Map.class, convertKeys(keys), getOptions(o), null)
-            result.getRows().each {row -> row.value?.put('__domainClass', dc)}
+			result.getRows().each {row ->
+				if (row.value instanceof Map) {
+					row.value?.put('__domainClass', dc)
+				}
+			}
 
             return result.getRows()
         }

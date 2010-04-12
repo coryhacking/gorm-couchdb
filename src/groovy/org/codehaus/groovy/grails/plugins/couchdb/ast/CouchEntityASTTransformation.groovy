@@ -430,7 +430,7 @@ class CouchEntityASTTransformation implements ASTTransformation {
         }
 
         // this doesn't seem to be necessary (and is only technically possible
-        // because groovy ignores private scope), but we're going to try to be thorough.
-        classNode.getFieldIndexLazy().remove(propertyName)
+        // because groovy ignores private scope), but we're trying to be thorough.
+        classNode.fieldIndex.remove(propertyName)
     }
 }

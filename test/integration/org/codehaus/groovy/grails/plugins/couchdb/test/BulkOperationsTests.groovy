@@ -69,7 +69,7 @@ class BulkOperationsTests extends GroovyTestCase {
         }
 
         // bulk save all of the documents
-        List<DocumentInfo> result = Project.bulkSave(bulkDocuments)
+        def result = Project.bulkSave(bulkDocuments)
 
         // verify that they all saved
         result.each {DocumentInfo info ->
@@ -97,6 +97,13 @@ class BulkOperationsTests extends GroovyTestCase {
         // test date finder here
         result = Task.findOpenTasksByStartDate(startDate)
         assertTrue "should have found at least 1 task (depends upon timing)", result.size() >= 1
+
+		// test a finder that doesn't have named values
+		result = Project.findById(p.id)
+		assertEquals "should have found one project", 1, result.size()
+		assertEquals "should have found project [${p.id}]", p.id, result[0].id
+		assertTrue "value should be a string", result[0].value instanceof String
+		assertEquals "value should be = '1'", "1", result[0].value
     }
 
     void testFinders() {
