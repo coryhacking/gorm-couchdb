@@ -30,7 +30,7 @@ class AttachmentsTests extends GroovyTestCase {
         def p = Project.get(id)
         if (p) {
             p.delete()
-        }
+        }        
 
         p = new Project()
 
@@ -46,6 +46,7 @@ class AttachmentsTests extends GroovyTestCase {
         assertEquals "should have one attachment", 1, p.attachments.size()
         assertEquals "contentType should be 'text/plain'", 'text/plain', p.attachments[att.path].contentType
         assertEquals "length should be '${att.length()}", att.length(), p.attachments[att.path].length
+		p.save()
 
         def att2 = new File("grails-app/conf/UrlMappings.groovy")
         p.saveAttachment(att2.path, "text/plain", att2.newInputStream(), att2.length())
