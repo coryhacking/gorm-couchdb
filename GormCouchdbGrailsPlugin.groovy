@@ -25,14 +25,14 @@ import org.springframework.core.io.Resource
 class GormCouchdbGrailsPlugin {
 
     // the plugin version
-    def version = '0.5'
+    def version = '0.6'
 
     // the version or versions of Grails the plugin is designed for
-    def grailsVersion = '1.1.1 > *'
+    def grailsVersion = '1.2 > *'
 
     // the other plugins this plugin depends on
-    def dependsOn = [core: '1.1.1 > *',
-             hibernate: '1.1.1 > *'
+    def dependsOn = [core: '1.2 > *',
+             hibernate: '1.2 > *'
     ]
 
     def loadAfter = ['core', 'domainClass', 'hibernate']
@@ -61,9 +61,7 @@ class GormCouchdbGrailsPlugin {
     def author = 'Warner Onstine, Cory Hacking'
     def authorEmail = ''
     def title = 'Grails CouchDB Plugin'
-    def description = '''\\
-A plugin that emulates the behavior of the GORM-Hibernate plugin against a CouchDB document-oriented database
-'''
+    def description = "A plugin that emulates the behavior of the GORM-Hibernate plugin against a CouchDB document-oriented database"
 
     // URL to the plugin's documentation
     def documentation = 'http://grails.org/GormCouchdb+Plugin'
