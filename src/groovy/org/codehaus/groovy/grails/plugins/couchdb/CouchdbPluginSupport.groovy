@@ -280,43 +280,19 @@ public class CouchdbPluginSupport {
             return couchdb.listDocuments(getOptions(o), null).getRows()
         }
 
-        metaClass.static.count = {Map o = [:] ->
-            return count(null, o)
-        }
-
-        metaClass.static.count = {String viewName, Map o = [:] ->
-            def view = viewName
-            if (!view) {
-                view = "count"
-            }
-            if (!view.contains("/")) {
-                view = domainClass.designName + "/" + view
-            }
-
-            def count = couchdb.queryView(view, Map.class, getOptions(o), null).getRows()
-
-            return (count ? count[0].value : 0) as Long
-        }
-
-        metaClass.static.list = {Map o = [:] ->
-            return list(null, o)
-        }
-
-        metaClass.static.list = {String viewName, Map o = [:] ->
-            def view = viewName
-            if (!view) {
-                view = "list"
-            }
-
-            return queryView(view, o)
-        }
-
         metaClass.static.queryView = {String viewName, Map o = [:] ->
             def view = viewName
             if (!view.contains("/")) {
                 view = domainClass.designName + "/" + view
             }
-            ViewResult result = couchdb.queryView(view, Map.class, getOptions(o), null)
+
+			def result
+			if (isDocumentQuery(o)) {
+				result = couchdb.queryViewAndDocuments(view, Map.class, domainClass.clazz, getOptions(o), null)
+			} else {
+            	result = couchdb.queryView(view, Map.class, getOptions(o), null)
+			}
+
             result.getRows().each {row ->
 				if (row.value instanceof Map) {
 					row.value?.put('__domainClass', dc)
@@ -332,7 +308,13 @@ public class CouchdbPluginSupport {
                 view = domainClass.designName + "/" + view
             }
 
-            ViewResult result = couchdb.queryViewByKeys(view, Map.class, convertKeys(keys), getOptions(o), null)
+			def result
+			if (isDocumentQuery(o)) {
+				result = couchdb.queryViewAndDocumentsByKeys(view, Map.class, domainClass.clazz, convertKeys(keys), getOptions(o), null)
+			} else {
+				result = couchdb.queryViewByKeys(view, Map.class, convertKeys(keys), getOptions(o), null)
+			}
+
 			result.getRows().each {row ->
 				if (row.value instanceof Map) {
 					row.value?.put('__domainClass', dc)
@@ -378,16 +360,16 @@ public class CouchdbPluginSupport {
         metaClass.static.methodMissing = {String methodName, args ->
 
             // find methods (can have search keys)
-            def matcher = (methodName =~ /^(find)(\w+)$/)
+            def matcher = (methodName =~ /^(find)((\w+)?)$/)
             if (!matcher.matches()) {
 
                 // list methods (just contains options)
-                matcher = (methodName =~ /^(list)(\w+)$/)
+                matcher = (methodName =~ /^(list)((\w+)?)$/)
                 matcher.reset()
                 if (!matcher.matches()) {
 
                     // count methods (only options)
-                    matcher = (methodName =~ /^(count)(\w+)$/)
+                    matcher = (methodName =~ /^(count)((\w+)?)$/)
                     matcher.reset()
                     if (!matcher.matches()) {
                         throw new MissingMethodException(methodName, delegate, args, true)
@@ -397,12 +379,12 @@ public class CouchdbPluginSupport {
 
             // set the view to everything after the method type (change first char to lowerCase).
             def method = matcher.group(1)
-            def view = matcher.group(2)
+            def view = matcher.group(2) ?: method
             view = domainClass.designName + "/" + view.substring(0, 1).toLowerCase() + view.substring(1)
 
-            // options should be the last map argument.
-            args = args.toList()
-            def options = (args.size() > 0 && args[args.size() - 1] instanceof Map) ? args.remove(args.size() - 1) : [:]
+            // named arguments are placed first
+			args = args.toList()
+            def options = (args.size() > 0 && args[0] instanceof Map) ? args.remove(0) : [:]
 
             // call the appropriate query and return the results
             if (method == "find") {
@@ -419,8 +401,9 @@ public class CouchdbPluginSupport {
                 return queryView(view, options)
 
             } else {
-                return count(view, options)
-
+	            def count = couchdb.queryView(view, Map.class, getOptions(options), null).getRows()
+	            return (count ? count[0].value : 0) as Long
+				
             }
         }
     }
@@ -643,6 +626,15 @@ public class CouchdbPluginSupport {
 
         return options
     }
+
+	private static boolean isDocumentQuery(Map o) {
+
+		if (o['include_docs'])
+			return true
+		else
+			return false
+
+	}
 
     private static List convertKeys(List keys) {
         def values = []

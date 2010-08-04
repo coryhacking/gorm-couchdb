@@ -1,4 +1,4 @@
-<plugin name='gorm-couchdb' version='0.6' grailsVersion='1.2 &gt; *'>
+<plugin name='gorm-couchdb' version='0.7' grailsVersion='1.2 &gt; *'>
   <author>Warner Onstine, Cory Hacking</author>
   <title>Grails CouchDB Plugin</title>
   <description>A plugin that emulates the behavior of the GORM-Hibernate plugin against a CouchDB document-oriented database</description>
