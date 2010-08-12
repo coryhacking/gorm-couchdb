@@ -363,7 +363,7 @@ public class CouchdbPluginSupport {
             def matcher = (methodName =~ /^(find)((\w+)?)$/)
             if (!matcher.matches()) {
 
-                // list methods (just contains options)
+                // list methods (can have search keys)
                 matcher = (methodName =~ /^(list)((\w+)?)$/)
                 matcher.reset()
                 if (!matcher.matches()) {
@@ -387,7 +387,7 @@ public class CouchdbPluginSupport {
             def options = (args.size() > 0 && args[0] instanceof Map) ? args.remove(0) : [:]
 
             // call the appropriate query and return the results
-            if (method == "find") {
+            if (method == "find" || method == "list") {
 
                 // assume that the list of keys (if any) is everything else
                 def keys = (args ?: [])
@@ -396,14 +396,10 @@ public class CouchdbPluginSupport {
                 } else {
                     return queryView(view, options)
                 }
-
-            } else if (method == "list") {
-                return queryView(view, options)
-
             } else {
 	            def count = couchdb.queryView(view, Map.class, getOptions(options), null).getRows()
 	            return (count ? count[0].value : 0) as Long
-				
+
             }
         }
     }
