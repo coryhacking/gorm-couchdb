@@ -531,7 +531,7 @@ public class CouchdbPluginSupport {
         def ds = application.config.couchdb
 
         String host = ds?.host ?: "localhost"
-        Integer port = ds?.port ?: 5984
+        Integer port = (ds?.port ?: 5984) as Integer
         String database = ds?.database ?: application.metadata["app.name"]
         String username = ds?.username ?: ""
         String password = ds?.password ?: ""

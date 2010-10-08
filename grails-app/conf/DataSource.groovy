@@ -1,11 +1,11 @@
-import grails.plugins.couchdb.cfg.CouchDomainConfiguration
+import grails.plugins.couchdb.cfg.CouchAnnotationConfiguration
 
 dataSource {
+	configClass = CouchAnnotationConfiguration.class
     pooled = true
     driverClassName = "org.hsqldb.jdbcDriver"
     username = "sa"
     password = ""
-    configClass = CouchDomainConfiguration.class
 }
 
 hibernate {
@@ -16,7 +16,7 @@ hibernate {
 
 couchdb {
     host = "localhost"
-    port = 5984
+    port = "5984"
     username = ""
     password = ""
 }
