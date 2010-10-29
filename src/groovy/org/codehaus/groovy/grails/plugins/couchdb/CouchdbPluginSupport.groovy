@@ -35,7 +35,6 @@ import org.jcouchdb.db.Options
 import org.jcouchdb.document.Attachment
 import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.document.ValueRow
-import org.jcouchdb.document.ViewResult
 import org.jcouchdb.exception.NotFoundException
 import org.jcouchdb.util.CouchDBUpdater
 import org.springframework.beans.BeanUtils
@@ -54,14 +53,14 @@ import org.svenson.converter.DefaultTypeConverterRepository
  */
 public class CouchdbPluginSupport {
 
-    static final PROPERTY_INSTANCE_MAP = new SoftThreadLocalMap()
+	static final PROPERTY_INSTANCE_MAP = new SoftThreadLocalMap()
 
-    static def doWithSpring = {ApplicationContext ctx ->
+	static def doWithSpring = {ApplicationContext ctx ->
 
-        updateCouchViews(application)
+		updateCouchViews(application)
 
-        // extend the jcouchdb ValueRow class to automatically look up properties of the internal value object
-        ValueRow.metaClass.propertyMissing = {String name ->
+		// extend the jcouchdb ValueRow class to automatically look up properties of the internal value object
+		ValueRow.metaClass.propertyMissing = {String name ->
 
 			// only look if the value is a Map; which should happen unless the view
 			// emit doesn't contain a named parameters, e.g. emit(doc._id, 1)
@@ -87,226 +86,226 @@ public class CouchdbPluginSupport {
 			} else {
 				throw new MissingPropertyException(name)
 			}
-        }
+		}
 
-        // register our CouchDomainClass artefacts that weren't already picked up by grails
-        application.domainClasses.each {GrailsDomainClass dc ->
-            if (CouchDomainClassArtefactHandler.isCouchDomainClass(dc.clazz)) {
-                CouchDomainClass couchDomainClass = new CouchDomainClass(dc.clazz)
-                application.addArtefact(CouchDomainClassArtefactHandler.TYPE, couchDomainClass)
-            }
-        }
+		// register our CouchDomainClass artefacts that weren't already picked up by grails
+		application.domainClasses.each {GrailsDomainClass dc ->
+			if (CouchDomainClassArtefactHandler.isCouchDomainClass(dc.clazz)) {
+				CouchDomainClass couchDomainClass = new CouchDomainClass(dc.clazz)
+				application.addArtefact(CouchDomainClassArtefactHandler.TYPE, couchDomainClass)
+			}
+		}
 
-        application.CouchDomainClasses.each {CouchDomainClass dc ->
+		application.CouchDomainClasses.each {CouchDomainClass dc ->
 
-            // Note the use of Groovy's ability to use dynamic strings in method names!
-            "${dc.fullName}"(dc.getClazz()) {bean ->
-                bean.singleton = false
-                bean.autowire = "byName"
-            }
+			// Note the use of Groovy's ability to use dynamic strings in method names!
+			"${dc.fullName}"(dc.getClazz()) {bean ->
+				bean.singleton = false
+				bean.autowire = "byName"
+			}
 
-            "${dc.fullName}DomainClass"(MethodInvokingFactoryBean) {
-                targetObject = ref("grailsApplication", true)
-                targetMethod = "getArtefact"
-                arguments = [CouchDomainClassArtefactHandler.TYPE, dc.fullName]
-            }
+			"${dc.fullName}DomainClass"(MethodInvokingFactoryBean) {
+				targetObject = ref("grailsApplication", true)
+				targetMethod = "getArtefact"
+				arguments = [CouchDomainClassArtefactHandler.TYPE, dc.fullName]
+			}
 
-            "${dc.fullName}PersistentClass"(MethodInvokingFactoryBean) {
-                targetObject = ref("${dc.fullName}DomainClass")
-                targetMethod = "getClazz"
-            }
+			"${dc.fullName}PersistentClass"(MethodInvokingFactoryBean) {
+				targetObject = ref("${dc.fullName}DomainClass")
+				targetMethod = "getClazz"
+			}
 
-            "${dc.fullName}Validator"(GrailsDomainClassValidator) {
-                messageSource = ref("messageSource")
-                domainClass = ref("${dc.fullName}DomainClass")
-                grailsApplication = ref("grailsApplication", true)
-            }
-        }
-    }
+			"${dc.fullName}Validator"(GrailsDomainClassValidator) {
+				messageSource = ref("messageSource")
+				domainClass = ref("${dc.fullName}DomainClass")
+				grailsApplication = ref("grailsApplication", true)
+			}
+		}
+	}
 
-    static def doWithDynamicMethods = {ApplicationContext ctx ->
-        enhanceDomainClasses(application, ctx)
-    }
+	static def doWithDynamicMethods = {ApplicationContext ctx ->
+		enhanceDomainClasses(application, ctx)
+	}
 
-    static enhanceDomainClasses(GrailsApplication application, ApplicationContext ctx) {
+	static enhanceDomainClasses(GrailsApplication application, ApplicationContext ctx) {
 
-        application.CouchDomainClasses.each {CouchDomainClass domainClass ->
-            Database db = getCouchDatabase(application)
+		application.CouchDomainClasses.each {CouchDomainClass domainClass ->
+			Database db = getCouchDatabase(application)
 
-            addInstanceMethods(application, domainClass, ctx, db)
-            addStaticMethods(application, domainClass, ctx, db)
-            addDynamicFinderSupport(application, domainClass, ctx, db)
+			addInstanceMethods(application, domainClass, ctx, db)
+			addStaticMethods(application, domainClass, ctx, db)
+			addDynamicFinderSupport(application, domainClass, ctx, db)
 
-            addValidationMethods(application, domainClass, ctx)
+			addValidationMethods(application, domainClass, ctx)
 
-        }
-    }
+		}
+	}
 
-    static updateCouchViews(GrailsApplication application) {
-        def views
+	static updateCouchViews(GrailsApplication application) {
+		def views
 
-        // update the couch views
-        if (application.warDeployed) {
-            views = new File(application.parentContext.servletContext.getRealPath("/WEB-INF") + "/grails-app/couchdb/views" as String)
-        } else {
-            views = new File("./grails-app/conf/couchdb/views")
-        }
+		// update the couch views
+		if (application.warDeployed) {
+			views = new File(application.parentContext.servletContext.getRealPath("/WEB-INF") + "/grails-app/couchdb/views" as String)
+		} else {
+			views = new File("./grails-app/conf/couchdb/views")
+		}
 
-        if (views.exists() && views.isDirectory()) {
+		if (views.exists() && views.isDirectory()) {
 
-            // Note that any map / reduce functions that are in couchdb but NOT here get
-            // removed when updating.  I believe this is by design in jcouchdb.
-            CouchDBUpdater updater = new CouchDBUpdater();
-            updater.setDatabase(getCouchDatabase(application));
-            updater.setDesignDocumentDir(views);
-            updater.updateDesignDocuments();
-        } else {
-            println "Warning, the couchdb views directory [${views.name}, ${views.path}] does not exist.  Views were not updated."
-        }
-    }
+			// Note that any map / reduce functions that are in couchdb but NOT here get
+			// removed when updating.  I believe this is by design in jcouchdb.
+			CouchDBUpdater updater = new CouchDBUpdater();
+			updater.setDatabase(getCouchDatabase(application));
+			updater.setDesignDocumentDir(views);
+			updater.updateDesignDocuments();
+		} else {
+			println "Warning, the couchdb views directory [${views.name}, ${views.path}] does not exist.  Views were not updated."
+		}
+	}
 
-    private static addInstanceMethods(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
-        def metaClass = dc.metaClass
-        def domainClass = dc
-        def couchdb = db
+	private static addInstanceMethods(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
+		def metaClass = dc.metaClass
+		def domainClass = dc
+		def couchdb = db
 
-        metaClass.save = {->
-            save(null)
-        }
+		metaClass.save = {->
+			save(null)
+		}
 
-        metaClass.save = {Map args = [:] ->
+		metaClass.save = {Map args = [:] ->
 
-            // todo: add support for failOnError:true in grails 1.2 (GRAILS-4343)
-            if (validate()) {
-                couchdb.createOrUpdateDocument autoTimeStamp(application, delegate)
+			// todo: add support for failOnError:true in grails 1.2 (GRAILS-4343)
+			if (validate()) {
+				couchdb.createOrUpdateDocument autoTimeStamp(application, delegate)
 
-                return delegate
-            }
+				return delegate
+			}
 
-            return null
-        }
+			return null
+		}
 
-        metaClass.delete = {->
-            delete(null)
-        }
+		metaClass.delete = {->
+			delete(null)
+		}
 
-        metaClass.delete = {Map args = [:] ->
-            couchdb.delete getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate)
-        }
+		metaClass.delete = {Map args = [:] ->
+			couchdb.delete getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate)
+		}
 
-        metaClass.readAttachment = {Serializable attachmentId ->
-            return couchdb.getAttachment(getDocumentId(domainClass, delegate), attachmentId.toString())
-        }
+		metaClass.readAttachment = {Serializable attachmentId ->
+			return couchdb.getAttachment(getDocumentId(domainClass, delegate), attachmentId.toString())
+		}
 
-        metaClass.saveAttachment = {Serializable attachmentId, String contentType, byte[] data ->
-            return couchdb.createAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString(), contentType, data)
-        }
+		metaClass.saveAttachment = {Serializable attachmentId, String contentType, byte[] data ->
+			return couchdb.createAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString(), contentType, data)
+		}
 
-        metaClass.saveAttachment = {Serializable attachmentId, String contentType, InputStream is, long length ->
-            return couchdb.createAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString(), contentType, is, length)
-        }
+		metaClass.saveAttachment = {Serializable attachmentId, String contentType, InputStream is, long length ->
+			return couchdb.createAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString(), contentType, is, length)
+		}
 
-        metaClass.deleteAttachment = {Serializable attachmentId ->
-            return couchdb.deleteAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString())
-        }
+		metaClass.deleteAttachment = {Serializable attachmentId ->
+			return couchdb.deleteAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString())
+		}
 
-        metaClass.toJSON = {->
-            return db.jsonConfig.getJsonGenerator().forValue(delegate);
-        }
-    }
+		metaClass.toJSON = {->
+			return db.jsonConfig.getJsonGenerator().forValue(delegate);
+		}
+	}
 
-    private static addStaticMethods(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
-        def metaClass = dc.metaClass
-        def domainClass = dc
-        def couchdb = db
+	private static addStaticMethods(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
+		def metaClass = dc.metaClass
+		def domainClass = dc
+		def couchdb = db
 
-        metaClass.static.get = {Serializable docId ->
-            try {
-                return couchdb.getDocument(domainClass.clazz, docId.toString())
+		metaClass.static.get = {Serializable docId ->
+			try {
+				return couchdb.getDocument(domainClass.clazz, docId.toString())
 
-            } catch (NotFoundException e) {
-                // fall through to return null
-            }
+			} catch (NotFoundException e) {
+				// fall through to return null
+			}
 
-            return null
-        }
+			return null
+		}
 
-        // Foo.exists(1)
-        metaClass.static.exists = {Serializable docId ->
-            get(docId) != null
-        }
+		// Foo.exists(1)
+		metaClass.static.exists = {Serializable docId ->
+			get(docId) != null
+		}
 
-        metaClass.static.delete = {Serializable docId, String version ->
-            couchdb.delete docId.toString(), version
-        }
+		metaClass.static.delete = {Serializable docId, String version ->
+			couchdb.delete docId.toString(), version
+		}
 
-        metaClass.static.bulkSave = {List documents ->
-            return bulkSave(documents, false)
-        }
+		metaClass.static.bulkSave = {List documents ->
+			return bulkSave(documents, false)
+		}
 
-        metaClass.static.bulkSave = {List documents, Boolean allOrNothing ->
-            documents.each {doc ->
-                autoTimeStamp(application, doc)
-            }
+		metaClass.static.bulkSave = {List documents, Boolean allOrNothing ->
+			documents.each {doc ->
+				autoTimeStamp(application, doc)
+			}
 
-            return couchdb.bulkCreateDocuments(documents, allOrNothing)
-        }
+			return couchdb.bulkCreateDocuments(documents, allOrNothing)
+		}
 
-        metaClass.static.bulkDelete = {List documents ->
-            return bulkDelete(documents, false)
-        }
+		metaClass.static.bulkDelete = {List documents ->
+			return bulkDelete(documents, false)
+		}
 
-        metaClass.static.bulkDelete = {List documents, boolean allOrNothing ->
-            return couchdb.bulkDeleteDocuments(documents, allOrNothing)
-        }
+		metaClass.static.bulkDelete = {List documents, boolean allOrNothing ->
+			return couchdb.bulkDeleteDocuments(documents, allOrNothing)
+		}
 
-        metaClass.static.readAttachment = {Serializable docId, String attachmentId ->
-            return couchdb.getAttachment(docId.toString(), attachmentId)
-        }
+		metaClass.static.readAttachment = {Serializable docId, String attachmentId ->
+			return couchdb.getAttachment(docId.toString(), attachmentId)
+		}
 
-        metaClass.static.saveAttachment = {Serializable docId, String version, String attachmentId, String contentType, byte[] data ->
-            return couchdb.createAttachment(docId.toString(), version, attachmentId, contentType, data)
-        }
+		metaClass.static.saveAttachment = {Serializable docId, String version, String attachmentId, String contentType, byte[] data ->
+			return couchdb.createAttachment(docId.toString(), version, attachmentId, contentType, data)
+		}
 
-        metaClass.static.saveAttachment = {Serializable docId, String version, String attachmentId, String contentType, InputStream is, long length ->
-            return couchdb.createAttachment(docId.toString(), version, attachmentId, contentType, is, length)
-        }
+		metaClass.static.saveAttachment = {Serializable docId, String version, String attachmentId, String contentType, InputStream is, long length ->
+			return couchdb.createAttachment(docId.toString(), version, attachmentId, contentType, is, length)
+		}
 
-        metaClass.static.deleteAttachment = {Serializable docId, String version, String attachmentId ->
-            return couchdb.deleteAttachment(docId.toString(), version, attachmentId)
-        }
+		metaClass.static.deleteAttachment = {Serializable docId, String version, String attachmentId ->
+			return couchdb.deleteAttachment(docId.toString(), version, attachmentId)
+		}
 
-        metaClass.static.findAll = {Map o = [:] ->
-            return couchdb.listDocuments(getOptions(o), null).getRows()
-        }
+		metaClass.static.findAll = {Map o = [:] ->
+			return couchdb.listDocuments(getOptions(o), null).getRows()
+		}
 
-        metaClass.static.queryView = {String viewName, Map o = [:] ->
-            def view = viewName
-            if (!view.contains("/")) {
-                view = domainClass.designName + "/" + view
-            }
+		metaClass.static.queryView = {String viewName, Map o = [:] ->
+			def view = viewName
+			if (!view.contains("/")) {
+				view = domainClass.designName + "/" + view
+			}
 
 			def result
 			if (isDocumentQuery(o)) {
 				result = couchdb.queryViewAndDocuments(view, Map.class, domainClass.clazz, getOptions(o), null)
 			} else {
-            	result = couchdb.queryView(view, Map.class, getOptions(o), null)
+				result = couchdb.queryView(view, Map.class, getOptions(o), null)
 			}
 
-            result.getRows().each {row ->
+			result.getRows().each {row ->
 				if (row.value instanceof Map) {
 					row.value?.put('__domainClass', dc)
 				}
 			}
 
-            return result.getRows()
-        }
+			return result.getRows()
+		}
 
-        metaClass.static.queryViewByKeys = {String viewName, List keys, Map o = [:] ->
-            def view = viewName
-            if (!view.contains("/")) {
-                view = domainClass.designName + "/" + view
-            }
+		metaClass.static.queryViewByKeys = {String viewName, List keys, Map o = [:] ->
+			def view = viewName
+			if (!view.contains("/")) {
+				view = domainClass.designName + "/" + view
+			}
 
 			def result
 			if (isDocumentQuery(o)) {
@@ -321,323 +320,323 @@ public class CouchdbPluginSupport {
 				}
 			}
 
-            return result.getRows()
-        }
+			return result.getRows()
+		}
 
-        metaClass.static.getDesignDocument = {String id ->
-            try {
-                def view = id
-                if (!view) {
-                    view = domainClass.designName
-                }
-                return couchdb.getDesignDocument(view)
-            } catch (NotFoundException e) {
-                // fall through to return null
-            }
+		metaClass.static.getDesignDocument = {String id ->
+			try {
+				def view = id
+				if (!view) {
+					view = domainClass.designName
+				}
+				return couchdb.getDesignDocument(view)
+			} catch (NotFoundException e) {
+				// fall through to return null
+			}
 
-            return null
-        }
+			return null
+		}
 
-        metaClass.static.saveDesignDocument = {DesignDocument doc ->
-            if (!doc.id) {
-                doc.id = domainClass.designName
-            }
+		metaClass.static.saveDesignDocument = {DesignDocument doc ->
+			if (!doc.id) {
+				doc.id = domainClass.designName
+			}
 
-            return couchdb.createOrUpdateDocument(doc)
-        }
+			return couchdb.createOrUpdateDocument(doc)
+		}
 
-        metaClass.static.deleteDesignDocument = {DesignDocument doc ->
-            return couchdb.delete(doc)
-        }
-    }
+		metaClass.static.deleteDesignDocument = {DesignDocument doc ->
+			return couchdb.delete(doc)
+		}
+	}
 
-    private static addDynamicFinderSupport(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
-        def metaClass = dc.metaClass
-        def domainClass = dc
-        def couchdb = db
+	private static addDynamicFinderSupport(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
+		def metaClass = dc.metaClass
+		def domainClass = dc
+		def couchdb = db
 
-        // This adds basic dynamic finder support.
-        metaClass.static.methodMissing = {String methodName, args ->
+		// This adds basic dynamic finder support.
+		metaClass.static.methodMissing = {String methodName, args ->
 
-            // find methods (can have search keys)
-            def matcher = (methodName =~ /^(find)((\w+)?)$/)
-            if (!matcher.matches()) {
+			// find methods (can have search keys)
+			def matcher = (methodName =~ /^(find)((\w+)?)$/)
+			if (!matcher.matches()) {
 
-                // list methods (can have search keys)
-                matcher = (methodName =~ /^(list)((\w+)?)$/)
-                matcher.reset()
-                if (!matcher.matches()) {
+				// list methods (can have search keys)
+				matcher = (methodName =~ /^(list)((\w+)?)$/)
+				matcher.reset()
+				if (!matcher.matches()) {
 
-                    // count methods (only options)
-                    matcher = (methodName =~ /^(count)((\w+)?)$/)
-                    matcher.reset()
-                    if (!matcher.matches()) {
-                        throw new MissingMethodException(methodName, delegate, args, true)
-                    }
-                }
-            }
+					// count methods (only options)
+					matcher = (methodName =~ /^(count)((\w+)?)$/)
+					matcher.reset()
+					if (!matcher.matches()) {
+						throw new MissingMethodException(methodName, delegate, args, true)
+					}
+				}
+			}
 
-            // set the view to everything after the method type (change first char to lowerCase).
-            def method = matcher.group(1)
-            def view = matcher.group(2) ?: method
-            view = domainClass.designName + "/" + view.substring(0, 1).toLowerCase() + view.substring(1)
+			// set the view to everything after the method type (change first char to lowerCase).
+			def method = matcher.group(1)
+			def view = matcher.group(2) ?: method
+			view = domainClass.designName + "/" + view.substring(0, 1).toLowerCase() + view.substring(1)
 
-            // named arguments are placed first
+			// named arguments are placed first
 			args = args.toList()
-            def options = (args.size() > 0 && args[0] instanceof Map) ? args.remove(0) : [:]
+			def options = (args.size() > 0 && args[0] instanceof Map) ? args.remove(0) : [:]
 
-            // call the appropriate query and return the results
-            if (method == "find" || method == "list") {
+			// call the appropriate query and return the results
+			if (method == "find" || method == "list") {
 
-                // assume that the list of keys (if any) is everything else
-                def keys = (args ?: [])
-                if (keys) {
-                    return queryViewByKeys(view, keys, options);
-                } else {
-                    return queryView(view, options)
-                }
-            } else {
-	            def count = couchdb.queryView(view, Map.class, getOptions(options), null).getRows()
-	            return (count ? count[0].value : 0) as Long
+				// assume that the list of keys (if any) is everything else
+				def keys = (args ?: [])
+				if (keys) {
+					return queryViewByKeys(view, keys, options);
+				} else {
+					return queryView(view, options)
+				}
+			} else {
+				def count = couchdb.queryView(view, Map.class, getOptions(options), null).getRows()
+				return (count ? count[0].value : 0) as Long
 
-            }
-        }
-    }
+			}
+		}
+	}
 
-    private static addValidationMethods(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx) {
-        def metaClass = dc.metaClass
-        def domainClass = dc
+	private static addValidationMethods(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx) {
+		def metaClass = dc.metaClass
+		def domainClass = dc
 
-        metaClass.static.getConstraints = {->
-            domainClass.constrainedProperties
-        }
+		metaClass.static.getConstraints = {->
+			domainClass.constrainedProperties
+		}
 
-        metaClass.getConstraints = {->
-            domainClass.constrainedProperties
-        }
+		metaClass.getConstraints = {->
+			domainClass.constrainedProperties
+		}
 
-        metaClass.constructor = {Map map ->
-            def instance = ctx.containsBean(domainClass.fullName) ? ctx.getBean(domainClass.fullName) : BeanUtils.instantiateClass(domainClass.clazz)
-            DataBindingUtils.bindObjectToDomainInstance(domainClass, instance, map)
-            DataBindingUtils.assignBidirectionalAssociations(instance, map, domainClass)
-            return instance
-        }
-        metaClass.setProperties = {Object o ->
-            DataBindingUtils.bindObjectToDomainInstance(domainClass, delegate, o)
-        }
-        metaClass.getProperties = {->
-            new DataBindingLazyMetaPropertyMap(delegate)
-        }
+		metaClass.constructor = {Map map ->
+			def instance = ctx.containsBean(domainClass.fullName) ? ctx.getBean(domainClass.fullName) : BeanUtils.instantiateClass(domainClass.clazz)
+			DataBindingUtils.bindObjectToDomainInstance(domainClass, instance, map)
+			DataBindingUtils.assignBidirectionalAssociations(instance, map, domainClass)
+			return instance
+		}
+		metaClass.setProperties = {Object o ->
+			DataBindingUtils.bindObjectToDomainInstance(domainClass, delegate, o)
+		}
+		metaClass.getProperties = {->
+			new DataBindingLazyMetaPropertyMap(delegate)
+		}
 
-        metaClass.hasErrors = {-> delegate.errors?.hasErrors() }
+		metaClass.hasErrors = {-> delegate.errors?.hasErrors() }
 
-        def get
-        def put
-        try {
-            def rch = application.classLoader.loadClass("org.springframework.web.context.request.RequestContextHolder")
-            get = {
-                def attributes = rch.getRequestAttributes()
-                if (attributes) {
-                    return attributes.request.getAttribute(it)
-                } else {
-                    return PROPERTY_INSTANCE_MAP.get().get(it)
-                }
-            }
-            put = {key, val ->
-                def attributes = rch.getRequestAttributes()
-                if (attributes) {
-                    attributes.request.setAttribute(key, val)
-                } else {
-                    PROPERTY_INSTANCE_MAP.get().put(key, val)
-                }
-            }
-        } catch (Throwable e) {
-            get = { PROPERTY_INSTANCE_MAP.get().get(it) }
-            put = {key, val -> PROPERTY_INSTANCE_MAP.get().put(key, val) }
-        }
+		def get
+		def put
+		try {
+			def rch = application.classLoader.loadClass("org.springframework.web.context.request.RequestContextHolder")
+			get = {
+				def attributes = rch.getRequestAttributes()
+				if (attributes) {
+					return attributes.request.getAttribute(it)
+				} else {
+					return PROPERTY_INSTANCE_MAP.get().get(it)
+				}
+			}
+			put = {key, val ->
+				def attributes = rch.getRequestAttributes()
+				if (attributes) {
+					attributes.request.setAttribute(key, val)
+				} else {
+					PROPERTY_INSTANCE_MAP.get().put(key, val)
+				}
+			}
+		} catch (Throwable e) {
+			get = { PROPERTY_INSTANCE_MAP.get().get(it) }
+			put = {key, val -> PROPERTY_INSTANCE_MAP.get().put(key, val) }
+		}
 
-        metaClass.getErrors = {->
-            def errors
-            def key = "org.codehaus.groovy.grails.ERRORS_${delegate.class.name}_${System.identityHashCode(delegate)}"
-            errors = get(key)
-            if (!errors) {
-                errors = new BeanPropertyBindingResult(delegate, delegate.getClass().getName())
-                put key, errors
-            }
-            errors
-        }
+		metaClass.getErrors = {->
+			def errors
+			def key = "org.codehaus.groovy.grails.ERRORS_${delegate.class.name}_${System.identityHashCode(delegate)}"
+			errors = get(key)
+			if (!errors) {
+				errors = new BeanPropertyBindingResult(delegate, delegate.getClass().getName())
+				put key, errors
+			}
+			errors
+		}
 
-        metaClass.setErrors = {Errors errors ->
-            def key = "org.codehaus.groovy.grails.ERRORS_${delegate.class.name}_${System.identityHashCode(delegate)}"
-            put key, errors
-        }
+		metaClass.setErrors = {Errors errors ->
+			def key = "org.codehaus.groovy.grails.ERRORS_${delegate.class.name}_${System.identityHashCode(delegate)}"
+			put key, errors
+		}
 
-        metaClass.clearErrors = {->
-            delegate.setErrors(new BeanPropertyBindingResult(delegate, delegate.getClass().getName()))
-        }
+		metaClass.clearErrors = {->
+			delegate.setErrors(new BeanPropertyBindingResult(delegate, delegate.getClass().getName()))
+		}
 
-        if (!metaClass.respondsTo(dc.getReference(), "validate")) {
-            metaClass.validate = {->
-                DomainClassPluginSupport.validateInstance(delegate, ctx)
-            }
-        }
-    }
+		if (!metaClass.respondsTo(dc.getReferenceInstance(), "validate")) {
+			metaClass.validate = {->
+				DomainClassPluginSupport.validateInstance(delegate, ctx)
+			}
+		}
+	}
 
-    private static Object autoTimeStamp(GrailsApplication application, Object domain) {
+	private static Object autoTimeStamp(GrailsApplication application, Object domain) {
 
-        CouchDomainClass dc = (CouchDomainClass) application.getArtefact(CouchDomainClassArtefactHandler.TYPE, domain.getClass().getName())
-        if (dc) {
-            def metaClass = dc.metaClass
+		CouchDomainClass dc = (CouchDomainClass) application.getArtefact(CouchDomainClassArtefactHandler.TYPE, domain.getClass().getName())
+		if (dc) {
+			def metaClass = dc.metaClass
 
-            MetaProperty property = metaClass.hasProperty(dc, GrailsDomainClassProperty.DATE_CREATED)
-            def time = System.currentTimeMillis()
-            if (property && domain[property.name] == null && getDocumentVersion(dc, domain) == null) {
-                def now = property.getType().newInstance([time] as Object[])
-                domain[property.name] = now
-            }
+			MetaProperty property = metaClass.hasProperty(dc, GrailsDomainClassProperty.DATE_CREATED)
+			def time = System.currentTimeMillis()
+			if (property && domain[property.name] == null && getDocumentVersion(dc, domain) == null) {
+				def now = property.getType().newInstance([time] as Object[])
+				domain[property.name] = now
+			}
 
-            property = metaClass.hasProperty(dc, GrailsDomainClassProperty.LAST_UPDATED)
-            if (property) {
-                def now = property.getType().newInstance([time] as Object[])
-                domain[property.name] = now
-            }
-        }
+			property = metaClass.hasProperty(dc, GrailsDomainClassProperty.LAST_UPDATED)
+			if (property) {
+				def now = property.getType().newInstance([time] as Object[])
+				domain[property.name] = now
+			}
+		}
 
-        return domain
-    }
+		return domain
+	}
 
-    private static String getDocumentId(CouchDomainClass dc, Object domain) {
-        def id = dc.getIdentifier()
-        if (id) {
-            domain[id.name]
-        }
-    }
+	private static String getDocumentId(CouchDomainClass dc, Object domain) {
+		def id = dc.getIdentifier()
+		if (id) {
+			domain[id.name]
+		}
+	}
 
-    private static String getDocumentVersion(CouchDomainClass dc, Object domain) {
-        def version = dc.getVersion()
-        if (version) {
-            domain[version.name]
-        }
-    }
+	private static String getDocumentVersion(CouchDomainClass dc, Object domain) {
+		def version = dc.getVersion()
+		if (version) {
+			domain[version.name]
+		}
+	}
 
-    private static Map<String, Attachment> getDocumentAttachments(CouchDomainClass dc, Object domain) {
-        def att = dc.getAttachments()
-        if (att) {
-            domain[att.name]
-        }
-    }
+	private static Map<String, Attachment> getDocumentAttachments(CouchDomainClass dc, Object domain) {
+		def att = dc.getAttachments()
+		if (att) {
+			domain[att.name]
+		}
+	}
 
-    private static Database getCouchDatabase(GrailsApplication application) {
-        def ds = application.config.couchdb
+	private static Database getCouchDatabase(GrailsApplication application) {
+		def ds = application.config.couchdb
 
-        String host = ds?.host ?: "localhost"
-        Integer port = (ds?.port ?: 5984) as Integer
-        String database = ds?.database ?: application.metadata["app.name"]
-        String username = ds?.username ?: ""
-        String password = ds?.password ?: ""
+		String host = ds?.host ?: "localhost"
+		Integer port = (ds?.port ?: 5984) as Integer
+		String database = ds?.database ?: application.metadata["app.name"]
+		String username = ds?.username ?: ""
+		String password = ds?.password ?: ""
 
-        String realm = ds?.realm ?: null
-        String scheme = ds?.scheme ?: null
+		String realm = ds?.realm ?: null
+		String scheme = ds?.scheme ?: null
 
-        Database db = new Database(host, port, database)
+		Database db = new Database(host, port, database)
 
-        // check to see if there are any user credentials and set them
-        if (StringUtils.isNotEmpty(username)) {
-            def credentials = new UsernamePasswordCredentials(username, password)
-            def authScope = new AuthScope(host, port)
+		// check to see if there are any user credentials and set them
+		if (StringUtils.isNotEmpty(username)) {
+			def credentials = new UsernamePasswordCredentials(username, password)
+			def authScope = new AuthScope(host, port)
 
-            // set the realm and scheme if they are set
-            if (StringUtils.isNotEmpty(realm) || StringUtils.isNotEmpty(scheme)) {
-                authScope = new AuthScope(host, port, realm, scheme)
-            }
+			// set the realm and scheme if they are set
+			if (StringUtils.isNotEmpty(realm) || StringUtils.isNotEmpty(scheme)) {
+				authScope = new AuthScope(host, port, realm, scheme)
+			}
 
-            db.server.setCredentials(authScope, credentials)
-        }
+			db.server.setCredentials(authScope, credentials)
+		}
 
-        DefaultTypeConverterRepository typeConverterRepository = new DefaultTypeConverterRepository();
-        JsonDateConverter dateConverter = new JsonDateConverter()
-        typeConverterRepository.addTypeConverter(dateConverter);
+		DefaultTypeConverterRepository typeConverterRepository = new DefaultTypeConverterRepository();
+		JsonDateConverter dateConverter = new JsonDateConverter()
+		typeConverterRepository.addTypeConverter(dateConverter);
 
-        JSON generator = new JSON();
-        generator.setIgnoredProperties(Arrays.asList("metaClass"));
-        generator.setTypeConverterRepository(typeConverterRepository);
-        generator.registerTypeConversion(java.util.Date.class, dateConverter);
-        generator.registerTypeConversion(java.sql.Date.class, dateConverter);
-        generator.registerTypeConversion(java.sql.Timestamp.class, dateConverter);
+		JSON generator = new JSON();
+		generator.setIgnoredProperties(Arrays.asList("metaClass"));
+		generator.setTypeConverterRepository(typeConverterRepository);
+		generator.registerTypeConversion(java.util.Date.class, dateConverter);
+		generator.registerTypeConversion(java.sql.Date.class, dateConverter);
+		generator.registerTypeConversion(java.sql.Timestamp.class, dateConverter);
 
-        JSONParser parser = new JSONParser();
-        parser.setTypeConverterRepository(typeConverterRepository);
-        parser.registerTypeConversion(java.util.Date.class, dateConverter);
-        parser.registerTypeConversion(java.sql.Date.class, dateConverter);
-        parser.registerTypeConversion(java.sql.Timestamp.class, dateConverter);
+		JSONParser parser = new JSONParser();
+		parser.setTypeConverterRepository(typeConverterRepository);
+		parser.registerTypeConversion(java.util.Date.class, dateConverter);
+		parser.registerTypeConversion(java.sql.Date.class, dateConverter);
+		parser.registerTypeConversion(java.sql.Timestamp.class, dateConverter);
 
-        db.jsonConfig = new JSONConfig(generator, parser);
+		db.jsonConfig = new JSONConfig(generator, parser);
 
-        return db
-    }
+		return db
+	}
 
-    private static Options getOptions(Map o) {
-        def options = new Options()
+	private static Options getOptions(Map o) {
+		def options = new Options()
 
-        if (o) {
-            o.each {String key, Object value ->
-                switch (key) {
-                    case "key":
-                    case "startkey":
-                    case "startkey_docid":
-                    case "endkey":
-                    case "endkey_docid":
-                        // keys need to be encoded
-                        options.put(key, JsonConverterUtils.toJSON(value))
-                        break
+		if (o) {
+			o.each {String key, Object value ->
+				switch (key) {
+					case "key":
+					case "startkey":
+					case "startkey_docid":
+					case "endkey":
+					case "endkey_docid":
+						// keys need to be encoded
+						options.put(key, JsonConverterUtils.toJSON(value))
+						break
 
-                    case "max":
-                    case "limit":
-                        options.put("limit", value)
-                        break
+					case "max":
+					case "limit":
+						options.put("limit", value)
+						break
 
-                    case "offset":
-                    case "skip":
-                        options.put("skip", value)
-                        break
+					case "offset":
+					case "skip":
+						options.put("skip", value)
+						break
 
-                    case "order":
-                        options.descending((value == "desc"))
-                        break
+					case "order":
+						options.descending((value == "desc"))
+						break
 
-                    case "update":
-                    case "group":
-                    case "stale":
-                    case "reduce":
-                    case "include_docs":
-                        options.put(key, value)
-                        break
+					case "update":
+					case "group":
+					case "stale":
+					case "reduce":
+					case "include_docs":
+						options.put(key, value)
+						break
 
-                    default:
-                        // ignore everything else
-                        break
-                }
-            }
-        }
+					default:
+						// ignore everything else
+						break
+				}
+			}
+		}
 
-        return options
-    }
+		return options
+	}
 
 	private static boolean isDocumentQuery(Map o) {
 
-		if (o['include_docs'])
+		if (o['include_docs']) {
 			return true
-		else
+		} else {
 			return false
-
+		}
 	}
 
-    private static List convertKeys(List keys) {
-        def values = []
-        keys.each {key ->
-            values << JsonConverterUtils.toJSON(key)
-        }
+	private static List convertKeys(List keys) {
+		def values = []
+		keys.each {key ->
+			values << JsonConverterUtils.toJSON(key)
+		}
 
-        return values
-    }
+		return values
+	}
 }
