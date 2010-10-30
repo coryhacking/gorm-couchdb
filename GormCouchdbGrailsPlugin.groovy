@@ -39,6 +39,7 @@ class GormCouchdbGrailsPlugin {
 
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
+			'grails-app/conf/Config.groovy',
             'grails-app/conf/spring/**',
             'grails-app/conf/hibernate/**',
             'grails-app/controllers/**',

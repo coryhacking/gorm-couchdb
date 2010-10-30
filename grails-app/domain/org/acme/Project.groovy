@@ -17,6 +17,7 @@ package org.acme
 
 import grails.plugins.couchdb.CouchEntity
 import org.jcouchdb.document.Attachment
+import org.svenson.JSONProperty
 
 /**
  *
@@ -25,27 +26,35 @@ import org.jcouchdb.document.Attachment
 @CouchEntity
 class Project {
 
-    String id
-    String version
+	String id
+	String version
 
-    String name
-    Date startDate
-    String frequency
+	String name
 
-    Date dateCreated
-    Date lastUpdated
+	@JSONProperty(ignoreIfNull = true)
+	String description
 
-    Map<String, Attachment> attachments = [:]
+	Date startDate
+	String frequency
 
-    String pass = "pass"
+	Date dateCreated
+	Date lastUpdated
 
-    static transients = ["pass"]
+	Map<String, Attachment> attachments = [:]
 
-    static constraints = {
-        id nullable: true
-        version nullable: true
-        name blank: false
-        startDate nullable: true
-        frequency nullable: true
-    }
+	String pass = "pass"
+
+	static transients = ["pass"]
+
+	static constraints = {
+		id nullable: true
+		version nullable: true
+
+		// name should be using global default constraint of (null: true, blank: false)
+
+		description shared: 'description'
+
+		startDate nullable: true
+		frequency nullable: true
+	}
 }

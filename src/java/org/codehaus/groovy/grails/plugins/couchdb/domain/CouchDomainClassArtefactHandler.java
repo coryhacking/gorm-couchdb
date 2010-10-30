@@ -15,31 +15,79 @@
  */
 package org.codehaus.groovy.grails.plugins.couchdb.domain;
 
-import org.codehaus.groovy.grails.commons.ArtefactHandlerAdapter;
-import org.codehaus.groovy.grails.commons.GrailsClass;
+import groovy.lang.Closure;
+import groovy.util.ConfigObject;
+import groovy.util.Eval;
 
 import grails.plugins.couchdb.CouchEntity;
+import grails.util.ClosureToMapPopulator;
+import org.codehaus.groovy.grails.commons.ArtefactHandlerAdapter;
+import org.codehaus.groovy.grails.commons.GrailsClass;
+import org.codehaus.groovy.grails.commons.GrailsClassUtils;
+import org.codehaus.groovy.grails.plugins.support.aware.GrailsConfigurationAware;
+import java.util.Map;
 
 /**
  * @author Warner Onstine, Cory Hacking
  */
-public class CouchDomainClassArtefactHandler extends ArtefactHandlerAdapter {
+public class CouchDomainClassArtefactHandler extends ArtefactHandlerAdapter implements GrailsConfigurationAware {
 
-    public static final String TYPE = "CouchDomain";
+	private static final String COUCH_MAPPING_STRATEGY = "CouchDB";
+	public static final String TYPE = "CouchDomain";
 
-    public CouchDomainClassArtefactHandler() {
-        super(TYPE, CouchDomainClass.class, CouchDomainClass.class, null);
-    }
+	private Map defaultConstraints;
 
-    public boolean isArtefactClass(Class clazz) {
-        return isCouchDomainClass(clazz);
-    }
+	public CouchDomainClassArtefactHandler() {
+		super(TYPE, CouchDomainClass.class, CouchDomainClass.class, null);
+	}
 
-    public static boolean isCouchDomainClass(Class clazz) {
-        return clazz != null && clazz.getAnnotation(CouchEntity.class) != null;
-    }
+	@SuppressWarnings ({"unchecked"})
+	public GrailsClass newArtefactClass(Class artefactClass) {
+		if (defaultConstraints != null) {
+			return new CouchDomainClass(artefactClass, defaultConstraints);
+		}
+		return new CouchDomainClass(artefactClass);
+	}
 
-    public GrailsClass newArtefactClass(Class artefactClass) {
-        return new CouchDomainClass(artefactClass);
-    }
+	public Map getDefaultConstraints() {
+		return defaultConstraints;
+	}
+
+	public boolean isArtefactClass(Class clazz) {
+		return isCouchDomainClass(clazz);
+	}
+
+	@SuppressWarnings ({"unchecked"})
+	public static boolean isCouchDomainClass(Class clazz) {
+
+		// it's not a closure
+		if (clazz == null) {
+			return false;
+		}
+
+		if (Closure.class.isAssignableFrom(clazz)) {
+			return false;
+		}
+
+		if (GrailsClassUtils.isJdk5Enum(clazz)) {
+			return false;
+		}
+
+		return clazz.getAnnotation(CouchEntity.class) != null;
+	}
+
+	public void setConfiguration(ConfigObject co) {
+		Object constraints = Eval.x(co, "x?.grails?.gorm?.default?.constraints");
+		if (constraints instanceof Closure) {
+			if (defaultConstraints != null) {
+				// repopulate existing map
+				defaultConstraints.clear();
+				new ClosureToMapPopulator(defaultConstraints).populate((Closure) constraints);
+			} else {
+				ClosureToMapPopulator populator = new ClosureToMapPopulator();
+				defaultConstraints = populator.populate((Closure) constraints);
+			}
+		}
+	}
+
 }

@@ -28,8 +28,6 @@ import org.codehaus.groovy.grails.plugins.couchdb.json.JsonConverterUtils
 import org.codehaus.groovy.grails.plugins.couchdb.json.JsonDateConverter
 import org.codehaus.groovy.grails.support.SoftThreadLocalMap
 import org.codehaus.groovy.grails.validation.GrailsDomainClassValidator
-import org.codehaus.groovy.grails.web.binding.DataBindingLazyMetaPropertyMap
-import org.codehaus.groovy.grails.web.binding.DataBindingUtils
 import org.jcouchdb.db.Database
 import org.jcouchdb.db.Options
 import org.jcouchdb.document.Attachment
@@ -37,7 +35,6 @@ import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.document.ValueRow
 import org.jcouchdb.exception.NotFoundException
 import org.jcouchdb.util.CouchDBUpdater
-import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean
 import org.springframework.context.ApplicationContext
 import org.springframework.validation.BeanPropertyBindingResult
@@ -99,24 +96,24 @@ public class CouchdbPluginSupport {
 		application.CouchDomainClasses.each {CouchDomainClass dc ->
 
 			// Note the use of Groovy's ability to use dynamic strings in method names!
-			"${dc.fullName}"(dc.getClazz()) {bean ->
+			"${dc.fullName}"(dc.clazz) { bean ->
 				bean.singleton = false
 				bean.autowire = "byName"
 			}
-
-			"${dc.fullName}DomainClass"(MethodInvokingFactoryBean) {
+			"${dc.fullName}DomainClass"(MethodInvokingFactoryBean) { bean ->
 				targetObject = ref("grailsApplication", true)
 				targetMethod = "getArtefact"
+				bean.lazyInit = true
 				arguments = [CouchDomainClassArtefactHandler.TYPE, dc.fullName]
 			}
-
-			"${dc.fullName}PersistentClass"(MethodInvokingFactoryBean) {
+			"${dc.fullName}PersistentClass"(MethodInvokingFactoryBean) { bean ->
 				targetObject = ref("${dc.fullName}DomainClass")
+				bean.lazyInit = true
 				targetMethod = "getClazz"
 			}
-
-			"${dc.fullName}Validator"(GrailsDomainClassValidator) {
+			"${dc.fullName}Validator"(GrailsDomainClassValidator) { bean ->
 				messageSource = ref("messageSource")
+				bean.lazyInit = true
 				domainClass = ref("${dc.fullName}DomainClass")
 				grailsApplication = ref("grailsApplication", true)
 			}
@@ -407,26 +404,7 @@ public class CouchdbPluginSupport {
 		def metaClass = dc.metaClass
 		def domainClass = dc
 
-		metaClass.static.getConstraints = {->
-			domainClass.constrainedProperties
-		}
-
-		metaClass.getConstraints = {->
-			domainClass.constrainedProperties
-		}
-
-		metaClass.constructor = {Map map ->
-			def instance = ctx.containsBean(domainClass.fullName) ? ctx.getBean(domainClass.fullName) : BeanUtils.instantiateClass(domainClass.clazz)
-			DataBindingUtils.bindObjectToDomainInstance(domainClass, instance, map)
-			DataBindingUtils.assignBidirectionalAssociations(instance, map, domainClass)
-			return instance
-		}
-		metaClass.setProperties = {Object o ->
-			DataBindingUtils.bindObjectToDomainInstance(domainClass, delegate, o)
-		}
-		metaClass.getProperties = {->
-			new DataBindingLazyMetaPropertyMap(delegate)
-		}
+		registerConstraintsProperty(metaClass, domainClass)
 
 		metaClass.hasErrors = {-> delegate.errors?.hasErrors() }
 
@@ -438,11 +416,10 @@ public class CouchdbPluginSupport {
 				def attributes = rch.getRequestAttributes()
 				if (attributes) {
 					return attributes.request.getAttribute(it)
-				} else {
-					return PROPERTY_INSTANCE_MAP.get().get(it)
 				}
+				return PROPERTY_INSTANCE_MAP.get().get(it)
 			}
-			put = {key, val ->
+			put = { key, val ->
 				def attributes = rch.getRequestAttributes()
 				if (attributes) {
 					attributes.request.setAttribute(key, val)
@@ -452,7 +429,7 @@ public class CouchdbPluginSupport {
 			}
 		} catch (Throwable e) {
 			get = { PROPERTY_INSTANCE_MAP.get().get(it) }
-			put = {key, val -> PROPERTY_INSTANCE_MAP.get().put(key, val) }
+			put = { key, val -> PROPERTY_INSTANCE_MAP.get().put(key, val) }
 		}
 
 		metaClass.getErrors = {->
@@ -465,21 +442,29 @@ public class CouchdbPluginSupport {
 			}
 			errors
 		}
-
-		metaClass.setErrors = {Errors errors ->
+		metaClass.setErrors = { Errors errors ->
 			def key = "org.codehaus.groovy.grails.ERRORS_${delegate.class.name}_${System.identityHashCode(delegate)}"
 			put key, errors
 		}
-
 		metaClass.clearErrors = {->
 			delegate.setErrors(new BeanPropertyBindingResult(delegate, delegate.getClass().getName()))
 		}
-
-		if (!metaClass.respondsTo(dc.getReferenceInstance(), "validate")) {
+		if (!domainClass.hasMetaMethod("validate")) {
 			metaClass.validate = {->
+
+				// clear the errors list before performing the validation
+				clearErrors()
+
+				// validate this instance
 				DomainClassPluginSupport.validateInstance(delegate, ctx)
 			}
 		}
+	}
+
+	static void registerConstraintsProperty(MetaClass metaClass, CouchDomainClass domainClass) {
+		metaClass.'static'.getConstraints = {-> domainClass.constrainedProperties }
+
+		metaClass.getConstraints = {-> domainClass.constrainedProperties }
 	}
 
 	private static Object autoTimeStamp(GrailsApplication application, Object domain) {

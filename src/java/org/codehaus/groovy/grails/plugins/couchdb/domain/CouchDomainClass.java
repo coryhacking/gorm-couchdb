@@ -27,11 +27,13 @@ import grails.plugins.couchdb.CouchId;
 import grails.plugins.couchdb.CouchVersion;
 import grails.util.GrailsNameUtils;
 import org.codehaus.groovy.grails.commons.AbstractGrailsClass;
+import org.codehaus.groovy.grails.commons.ExternalGrailsDomainClass;
 import org.codehaus.groovy.grails.commons.GrailsDomainClass;
 import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty;
 import org.codehaus.groovy.grails.commons.GrailsDomainConfigurationUtil;
 import org.codehaus.groovy.grails.exceptions.GrailsDomainException;
 import org.codehaus.groovy.grails.validation.ConstrainedProperty;
+import org.codehaus.groovy.grails.validation.GrailsDomainClassValidator;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 import javax.persistence.Version;
@@ -53,7 +55,7 @@ import java.util.Set;
 /**
  * @author Warner Onstine, Cory Hacking
  */
-public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomainClass {
+public class CouchDomainClass extends AbstractGrailsClass implements ExternalGrailsDomainClass {
 
 	private static final Log log = LogFactory.getLog(CouchDomainClass.class);
 
@@ -73,13 +75,17 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
 	private Map constraints = new HashMap();
 	private Validator validator;
 
-	public CouchDomainClass(Class clazz) {
+	private Map<String, Object> defaultConstraints;
+
+	public CouchDomainClass(Class<?> clazz, Map<String, Object> defaultConstraints) {
 		super(clazz, "");
 
 		CouchEntity entityAnnotation = (CouchEntity) clazz.getAnnotation(CouchEntity.class);
 		if (entityAnnotation == null) {
 			throw new GrailsDomainException("Class [" + clazz.getName() + "] is not annotated with grails.plugins.couchdb.CouchEntity!");
 		}
+
+		this.defaultConstraints = defaultConstraints;
 
 		// try to read the "type" annotation property
 		try {
@@ -115,11 +121,14 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
 
 		// process the constraints
 		try {
-			this.constraints = GrailsDomainConfigurationUtil.evaluateConstraints(getReferenceInstance(), this.persistentPropertyArray);
+			initializeConstraints();
 		} catch (Exception e) {
 			log.error("Error reading class [" + getClazz() + "] constraints: " + e.getMessage(), e);
 		}
+	}
 
+	public CouchDomainClass(Class<?> clazz) {
+		this(clazz, null);
 	}
 
 	private void evaluateClassProperties(PropertyDescriptor[] descriptors) {
@@ -270,11 +279,28 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
 	}
 
 	public Map getConstrainedProperties() {
-		return Collections.unmodifiableMap(this.constraints);
+		if (constraints == null) {
+			initializeConstraints();
+		}
+		return Collections.unmodifiableMap(constraints);
+	}
+
+	private void initializeConstraints() {
+		// process the constraints
+		if (defaultConstraints != null) {
+			constraints = GrailsDomainConfigurationUtil.evaluateConstraints(getClazz(), persistentPropertyArray, defaultConstraints);
+		} else {
+			constraints = GrailsDomainConfigurationUtil.evaluateConstraints(getClazz(), persistentPropertyArray);
+		}
 	}
 
 	public Validator getValidator() {
-		return this.validator;
+		if (validator == null) {
+			GrailsDomainClassValidator gdcv = new GrailsDomainClassValidator();
+			gdcv.setDomainClass(this);
+			validator = gdcv;
+		}
+		return validator;
 	}
 
 	public void setValidator(Validator validator) {
@@ -294,24 +320,23 @@ public class CouchDomainClass extends AbstractGrailsClass implements GrailsDomai
 	}
 
 	public void refreshConstraints() {
-		try {
-			this.constraints = GrailsDomainConfigurationUtil.evaluateConstraints(getReferenceInstance(), this.persistentPropertyArray);
+		if (defaultConstraints != null) {
+			constraints = GrailsDomainConfigurationUtil.evaluateConstraints(getClazz(), persistentPropertyArray, defaultConstraints);
+		} else {
+			constraints = GrailsDomainConfigurationUtil.evaluateConstraints(getClazz(), persistentPropertyArray);
+		}
 
-			// Embedded components have their own ComponentDomainClass
-			// instance which won't be refreshed by the application.
-			// So, we have to do it here.
-			for (GrailsDomainClassProperty property : this.persistentPropertyArray) {
-				if (property.isEmbedded()) {
-					property.getComponent().refreshConstraints();
-				}
+		// Embedded components have their own ComponentDomainClass instance which
+		// won't be refreshed by the application. So, we have to do it here.
+		for (GrailsDomainClassProperty property : persistentPropertyArray) {
+			if (property.isEmbedded()) {
+				property.getComponent().refreshConstraints();
 			}
-		} catch (Exception e) {
-			log.error("Error reading class [" + getClazz() + "] constraints: " + e.getMessage(), e);
 		}
 	}
 
 	public boolean hasSubClasses() {
-		return false;
+		return getSubClasses().size() > 0;
 	}
 
 	public Map getMappedBy() {
