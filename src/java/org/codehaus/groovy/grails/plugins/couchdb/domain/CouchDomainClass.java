@@ -59,6 +59,8 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 
 	private static final Log log = LogFactory.getLog(CouchDomainClass.class);
 
+	private static final String COUCH_MAPPING_STRATEGY = "CouchDB";
+
 	private Map<String, GrailsDomainClassProperty> propertyMap = new HashMap<String, GrailsDomainClassProperty>();
 	private GrailsDomainClassProperty[] propertiesArray;
 
@@ -75,9 +77,11 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 	private Map constraints = new HashMap();
 	private Validator validator;
 
+	private boolean shouldFailOnError;
+
 	private Map<String, Object> defaultConstraints;
 
-	public CouchDomainClass(Class<?> clazz, Map<String, Object> defaultConstraints) {
+	public CouchDomainClass(Class<?> clazz, Map<String, Object> defaultConstraints, boolean shouldFailOnError) {
 		super(clazz, "");
 
 		CouchEntity entityAnnotation = (CouchEntity) clazz.getAnnotation(CouchEntity.class);
@@ -86,6 +90,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 		}
 
 		this.defaultConstraints = defaultConstraints;
+		this.shouldFailOnError = shouldFailOnError;
 
 		// try to read the "type" annotation property
 		try {
@@ -128,7 +133,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 	}
 
 	public CouchDomainClass(Class<?> clazz) {
-		this(clazz, null);
+		this(clazz, null, false);
 	}
 
 	private void evaluateClassProperties(PropertyDescriptor[] descriptors) {
@@ -242,6 +247,10 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 		return this.typeFieldName;
 	}
 
+	public boolean getShouldFailOnError() {
+		return shouldFailOnError;
+	}
+
 	public String getDesignName() {
 		return designName;
 	}
@@ -308,7 +317,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 	}
 
 	public String getMappingStrategy() {
-		return "CouchDB";
+		return COUCH_MAPPING_STRATEGY;
 	}
 
 	public boolean isRoot() {

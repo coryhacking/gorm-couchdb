@@ -25,6 +25,7 @@ import org.codehaus.groovy.grails.commons.ArtefactHandlerAdapter;
 import org.codehaus.groovy.grails.commons.GrailsClass;
 import org.codehaus.groovy.grails.commons.GrailsClassUtils;
 import org.codehaus.groovy.grails.plugins.support.aware.GrailsConfigurationAware;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,10 +33,10 @@ import java.util.Map;
  */
 public class CouchDomainClassArtefactHandler extends ArtefactHandlerAdapter implements GrailsConfigurationAware {
 
-	private static final String COUCH_MAPPING_STRATEGY = "CouchDB";
 	public static final String TYPE = "CouchDomain";
 
 	private Map defaultConstraints;
+	private Object shouldFailConfigProperty;
 
 	public CouchDomainClassArtefactHandler() {
 		super(TYPE, CouchDomainClass.class, CouchDomainClass.class, null);
@@ -43,14 +44,18 @@ public class CouchDomainClassArtefactHandler extends ArtefactHandlerAdapter impl
 
 	@SuppressWarnings ({"unchecked"})
 	public GrailsClass newArtefactClass(Class artefactClass) {
-		if (defaultConstraints != null) {
-			return new CouchDomainClass(artefactClass, defaultConstraints);
-		}
-		return new CouchDomainClass(artefactClass);
-	}
 
-	public Map getDefaultConstraints() {
-		return defaultConstraints;
+		boolean shouldFailOnError = false;
+		if (shouldFailConfigProperty instanceof Boolean) {
+			shouldFailOnError = (Boolean.TRUE == shouldFailConfigProperty);
+		} else if (shouldFailConfigProperty instanceof List) {
+			if (artefactClass != null) {
+				List packageList = (List) shouldFailConfigProperty;
+				shouldFailOnError = GrailsClassUtils.isClassBelowPackage(artefactClass, packageList);
+			}
+		}
+
+		return new CouchDomainClass(artefactClass, defaultConstraints, shouldFailOnError);
 	}
 
 	public boolean isArtefactClass(Class clazz) {
@@ -88,6 +93,7 @@ public class CouchDomainClassArtefactHandler extends ArtefactHandlerAdapter impl
 				defaultConstraints = populator.populate((Closure) constraints);
 			}
 		}
-	}
 
+		shouldFailConfigProperty = Eval.x(co, "x?.grails?.gorm?.failOnError");
+	}
 }

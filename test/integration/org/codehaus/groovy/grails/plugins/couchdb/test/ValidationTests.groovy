@@ -15,18 +15,16 @@
  */
 package org.codehaus.groovy.grails.plugins.couchdb.test
 
-import org.acme.Contact
-import org.acme.Gender
+import grails.validation.ValidationException
 import org.acme.Project
-import org.acme.Task
 
 /**
  * @author Cory Hacking
  */
 public class ValidationTests extends GroovyTestCase {
 
-    void testDefaultConstraints() {
-        def p = new Project()
+	void testDefaultConstraints() {
+		def p = new Project()
 
 		p.validate()
 		assertFalse "should not have errors", p.hasErrors()
@@ -35,10 +33,10 @@ public class ValidationTests extends GroovyTestCase {
 
 		p.validate()
 		assertTrue "should have errors (can't be blank)", p.hasErrors()
-		assertNull "should not have saved", p.save()
-        assertEquals "should have 1 error", p.errors.allErrors.size(), 1
-        assertEquals "name should be in error", p.errors.allErrors[0].field, "name"
-    }
+		assertNull "should not have saved", p.save('failOnError': false)
+		assertEquals "should have 1 error", p.errors.allErrors.size(), 1
+		assertEquals "name should be in error", p.errors.allErrors[0].field, "name"
+	}
 
 	void testNamedConstraints() {
 
@@ -50,15 +48,35 @@ public class ValidationTests extends GroovyTestCase {
 		p.description = ""
 
 		p.validate()
-		assertTrue "should have errors (can't be blank)", p.hasErrors()
+		assertTrue "should have errors (description can't be blank)", p.hasErrors()
 
 		p.description = "too short"
 
 		p.validate()
-		assertTrue "should have errors (too short)", p.hasErrors()
+		assertTrue "should have errors (description too short)", p.hasErrors()
 
 		p.description = "long enough"
 		p.validate()
 		assertFalse "should not have errors", p.hasErrors()
+	}
+
+	void testFailOnError() {
+
+		def p = new Project()
+
+		p.description = ""
+
+		try {
+			p.save('failOnError': true)
+			fail "Project save() should have failed of a validation error."
+		} catch (Exception e) {
+			assertTrue "should have thrown a DataAccessException instead of ${e.class.name}", e instanceof ValidationException
+		}
+
+		try {
+			assertNull "should not have saved", p.save('failOnError': false)
+		} catch (Exception e) {
+			fail "Project save() should not have failed of a validation error."
+		}
 	}
 }

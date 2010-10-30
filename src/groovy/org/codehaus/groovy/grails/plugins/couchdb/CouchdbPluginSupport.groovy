@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.codehaus.groovy.grails.commons.GrailsApplication
+import org.codehaus.groovy.grails.commons.GrailsClassUtils
 import org.codehaus.groovy.grails.commons.GrailsDomainClass
 import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
 import org.codehaus.groovy.grails.plugins.DomainClassPluginSupport
@@ -43,12 +44,17 @@ import org.svenson.JSON
 import org.svenson.JSONConfig
 import org.svenson.JSONParser
 import org.svenson.converter.DefaultTypeConverterRepository
+import grails.validation.ValidationException
 
 /**
  *
  * @author Warner Onstine, Cory Hacking
  */
 public class CouchdbPluginSupport {
+
+	private static final String ARGUMENT_VALIDATE = "validate";
+	private static final String ARGUMENT_FAIL_ON_ERROR = "failOnError";
+	private static final String FAIL_ON_ERROR_CONFIG_PROPERTY = "grails.gorm.failOnError";
 
 	static final PROPERTY_INSTANCE_MAP = new SoftThreadLocalMap()
 
@@ -172,14 +178,22 @@ public class CouchdbPluginSupport {
 
 		metaClass.save = {Map args = [:] ->
 
-			// todo: add support for failOnError:true in grails 1.2 (GRAILS-4343)
-			if (validate()) {
-				couchdb.createOrUpdateDocument autoTimeStamp(application, delegate)
+			boolean valid = (shouldValidate(args, domainClass)) ? validate() : true
+			if (!valid) {
 
-				return delegate
+				boolean shouldFail = dc.shouldFailOnError;
+				if (args != null && args.containsKey(ARGUMENT_FAIL_ON_ERROR)) {
+					shouldFail = GrailsClassUtils.getBooleanFromMap(ARGUMENT_FAIL_ON_ERROR, args);
+				}
+				if (shouldFail) {
+					throw new ValidationException("Validation Error(s) occurred during save()", delegate.errors);
+				}
+				return null;
 			}
 
-			return null
+			couchdb.createOrUpdateDocument autoTimeStamp(application, delegate)
+
+			return delegate
 		}
 
 		metaClass.delete = {->
@@ -623,5 +637,27 @@ public class CouchdbPluginSupport {
 		}
 
 		return values
+	}
+
+	/**
+	 * Checks whether validation should be performed
+	 * @return True if the domain class should be validated
+	 * @param arguments The arguments to the validate method
+	 * @param domainClass The domain class
+	 */
+	private static boolean shouldValidate(Map args, CouchDomainClass domainClass) {
+		if (domainClass == null) {
+			return false
+		}
+
+		if (args.length == 0) {
+			return true
+		}
+
+		if (args.containsKey(ARGUMENT_VALIDATE)) {
+			return GrailsClassUtils.getBooleanFromMap(ARGUMENT_VALIDATE, args)
+		}
+
+		return true
 	}
 }
