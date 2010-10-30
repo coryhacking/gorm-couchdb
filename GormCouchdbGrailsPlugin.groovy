@@ -25,7 +25,7 @@ import org.springframework.core.io.Resource
 class GormCouchdbGrailsPlugin {
 
     // the plugin version
-    def version = '0.7.1'
+    def version = '0.7.2'
 
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = '1.2 > *'
