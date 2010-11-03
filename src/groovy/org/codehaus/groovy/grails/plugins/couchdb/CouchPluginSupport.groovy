@@ -52,9 +52,9 @@ import org.svenson.converter.DefaultTypeConverterRepository
  *
  * @author Warner Onstine, Cory Hacking
  */
-public class CouchdbPluginSupport {
+public class CouchPluginSupport {
 
-	private static final Log log = LogFactory.getLog(CouchDBPluginSupport.class);
+	private static final Log log = LogFactory.getLog(CouchPluginSupport.class);
 
 	private static final String ARGUMENT_VALIDATE = "validate";
 	private static final String ARGUMENT_FAIL_ON_ERROR = "failOnError";
