@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import org.codehaus.groovy.grails.plugins.couchdb.CouchdbPluginSupport
+import org.codehaus.groovy.grails.plugins.couchdb.CouchDBPluginSupport
 import org.codehaus.groovy.grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler
 import org.springframework.core.io.Resource
 
@@ -24,62 +24,63 @@ import org.springframework.core.io.Resource
  */
 class GormCouchdbGrailsPlugin {
 
-    // the plugin version
-    def version = '0.7.2'
+	// the plugin version
+	def version = '0.8'
 
-    // the version or versions of Grails the plugin is designed for
-    def grailsVersion = '1.2 > *'
+	// the version or versions of Grails the plugin is designed for
+	def grailsVersion = '1.2 > *'
 
-    // the other plugins this plugin depends on
-    def dependsOn = [core: '1.2 > *',
-             hibernate: '1.2 > *'
-    ]
+	// the other plugins this plugin depends on
+	def dependsOn = [
+			core: '1.2 > *',
+			hibernate: '1.2 > *'
+	]
 
-    def loadAfter = ['core', 'domainClass', 'hibernate']
+	def loadAfter = ['core', 'domainClass', 'hibernate']
 
-    // resources that are excluded from plugin packaging
-    def pluginExcludes = [
+	// resources that are excluded from plugin packaging
+	def pluginExcludes = [
 			'grails-app/conf/Config.groovy',
-            'grails-app/conf/spring/**',
-            'grails-app/conf/hibernate/**',
-            'grails-app/controllers/**',
-            'grails-app/domain/**',
-            'grails-app/views/**',
-            'grails-app/i18n/**',
-            'web-app/**',
+			'grails-app/conf/spring/**',
+			'grails-app/conf/hibernate/**',
+			'grails-app/controllers/**',
+			'grails-app/domain/**',
+			'grails-app/views/**',
+			'grails-app/i18n/**',
+			'web-app/**',
 
-            'grails-app/conf/couchdb/views/**',
-            'src/groovy/org/acme/**',
-            'src/java/org/acme/**'
-    ]
+			'grails-app/conf/couchdb/views/**',
+			'src/groovy/org/acme/**',
+			'src/java/org/acme/**'
+	]
 
-    def artefacts = [CouchDomainClassArtefactHandler]
+	def artefacts = [CouchDomainClassArtefactHandler]
 
-    def watchedResources = [
-            'file:./grails-app/conf/couchdb/views/**',
-    ]
+	def watchedResources = [
+			'file:./grails-app/conf/couchdb/views/**',
+	]
 
-    def author = 'Warner Onstine, Cory Hacking'
-    def authorEmail = ''
-    def title = 'Grails CouchDB Plugin'
-    def description = "A plugin that emulates the behavior of the GORM-Hibernate plugin against a CouchDB document-oriented database"
+	def author = 'Warner Onstine, Cory Hacking'
+	def authorEmail = ''
+	def title = 'Grails CouchDB Plugin'
+	def description = "A plugin that emulates the behavior of the GORM-Hibernate plugin against a CouchDB document-oriented database"
 
-    // URL to the plugin's documentation
-    def documentation = 'http://grails.org/GormCouchdb+Plugin'
+	// URL to the plugin's documentation
+	def documentation = 'http://grails.org/GormCouchdb+Plugin'
 
-    def doWithSpring = CouchdbPluginSupport.doWithSpring
+	def doWithSpring = CouchDBPluginSupport.doWithSpring
 
-    def doWithDynamicMethods = CouchdbPluginSupport.doWithDynamicMethods
+	def doWithDynamicMethods = CouchDBPluginSupport.doWithDynamicMethods
 
-    def onChange = {event ->
+	def onChange = {event ->
 
-        if (event.source instanceof Resource) {
-            log.debug("CouchDB view ${event.source} changed. Updating views...")
+		if (event.source instanceof Resource) {
+			log.debug("CouchDB view ${event.source} changed. Updating views...")
 
-            // update the couch views...
-            //  todo: update just the specific view
-            CouchdbPluginSupport.updateCouchViews(application)
+			// update the couch views...
+			//  todo: update just the specific view
+			CouchDBPluginSupport.updateCouchViews(application)
 
-        }
-    }
+		}
+	}
 }

@@ -72,6 +72,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 	private CouchDomainClassProperty attachments;
 	private String type;
 	private String typeFieldName;
+	private String databaseId;
 	private String designName;
 
 	private Map constraints = new HashMap();
@@ -120,6 +121,18 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 
 		// we always want a default design name even if the type is disabled
 		designName = (type != null) ? type : clazz.getSimpleName().toLowerCase();
+
+		// try to read the "type" annotation property
+		try {
+			databaseId = entityAnnotation.db();
+
+			// if the db annotation is empty, then just use the default
+			if ("".equals(databaseId)) {
+				databaseId = null;
+			}
+		} catch (IncompleteAnnotationException ex) {
+			databaseId = null;
+		}
 
 		PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(clazz);
 		evaluateClassProperties(descriptors);
@@ -253,6 +266,10 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 
 	public String getDesignName() {
 		return designName;
+	}
+
+	public String getDatabaseId() {
+		return databaseId;
 	}
 
 	public Map getAssociationMap() {

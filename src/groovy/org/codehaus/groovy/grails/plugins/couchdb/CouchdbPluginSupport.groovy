@@ -15,7 +15,10 @@
  */
 package org.codehaus.groovy.grails.plugins.couchdb
 
+import grails.validation.ValidationException
 import org.apache.commons.lang.StringUtils
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.LogFactory
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.codehaus.groovy.grails.commons.GrailsApplication
@@ -27,6 +30,7 @@ import org.codehaus.groovy.grails.plugins.couchdb.domain.CouchDomainClass
 import org.codehaus.groovy.grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler
 import org.codehaus.groovy.grails.plugins.couchdb.json.JsonConverterUtils
 import org.codehaus.groovy.grails.plugins.couchdb.json.JsonDateConverter
+import org.codehaus.groovy.grails.plugins.couchdb.util.GrailsCouchDBUpdater
 import org.codehaus.groovy.grails.support.SoftThreadLocalMap
 import org.codehaus.groovy.grails.validation.GrailsDomainClassValidator
 import org.jcouchdb.db.Database
@@ -35,7 +39,6 @@ import org.jcouchdb.document.Attachment
 import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.document.ValueRow
 import org.jcouchdb.exception.NotFoundException
-import org.jcouchdb.util.CouchDBUpdater
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean
 import org.springframework.context.ApplicationContext
 import org.springframework.validation.BeanPropertyBindingResult
@@ -44,13 +47,14 @@ import org.svenson.JSON
 import org.svenson.JSONConfig
 import org.svenson.JSONParser
 import org.svenson.converter.DefaultTypeConverterRepository
-import grails.validation.ValidationException
 
 /**
  *
  * @author Warner Onstine, Cory Hacking
  */
 public class CouchdbPluginSupport {
+
+	private static final Log log = LogFactory.getLog(CouchDBPluginSupport.class);
 
 	private static final String ARGUMENT_VALIDATE = "validate";
 	private static final String ARGUMENT_FAIL_ON_ERROR = "failOnError";
@@ -59,8 +63,6 @@ public class CouchdbPluginSupport {
 	static final PROPERTY_INSTANCE_MAP = new SoftThreadLocalMap()
 
 	static def doWithSpring = {ApplicationContext ctx ->
-
-		updateCouchViews(application)
 
 		// extend the jcouchdb ValueRow class to automatically look up properties of the internal value object
 		ValueRow.metaClass.propertyMissing = {String name ->
@@ -133,7 +135,7 @@ public class CouchdbPluginSupport {
 	static enhanceDomainClasses(GrailsApplication application, ApplicationContext ctx) {
 
 		application.CouchDomainClasses.each {CouchDomainClass domainClass ->
-			Database db = getCouchDatabase(application)
+			Database db = getCouchDatabase(application, domainClass.databaseId, true)
 
 			addInstanceMethods(application, domainClass, ctx, db)
 			addStaticMethods(application, domainClass, ctx, db)
@@ -142,28 +144,39 @@ public class CouchdbPluginSupport {
 			addValidationMethods(application, domainClass, ctx)
 
 		}
+
+		// update the related document view(s)
+		updateCouchViews(application)
 	}
 
 	static updateCouchViews(GrailsApplication application) {
-		def views
 
-		// update the couch views
-		if (application.warDeployed) {
-			views = new File(application.parentContext.servletContext.getRealPath("/WEB-INF") + "/grails-app/couchdb/views" as String)
-		} else {
-			views = new File("./grails-app/conf/couchdb/views")
+		// the base path...
+		def viewsPath = ((application.warDeployed) ? application.parentContext.servletContext.getRealPath("/WEB-INF") + "/grails-app/couchdb/views/" : "./grails-app/conf/couchdb/views/")
+		def views = new File(viewsPath)
+
+		// make sure the views directory exists...
+		if (!views.exists() || !views.isDirectory()) {
+			log.warn "The couchdb views directory [${viewsPath}] does not exist.  Views were not updated."
+			return
 		}
 
-		if (views.exists() && views.isDirectory()) {
+		// update the appropriate view for each domain class
+		application.CouchDomainClasses.each {CouchDomainClass domainClass ->
 
-			// Note that any map / reduce functions that are in couchdb but NOT here get
-			// removed when updating.  I believe this is by design in jcouchdb.
-			CouchDBUpdater updater = new CouchDBUpdater();
-			updater.setDatabase(getCouchDatabase(application));
-			updater.setDesignDocumentDir(views);
-			updater.updateDesignDocuments();
-		} else {
-			println "Warning, the couchdb views directory [${views.name}, ${views.path}] does not exist.  Views were not updated."
+			def view = new File(views, domainClass.designName)
+			if (view.exists() && view.isDirectory()) {
+
+				// Note that by design any map / reduce functions that are in couchdb but NOT here get
+				// removed when updating.
+				GrailsCouchDBUpdater updater = new GrailsCouchDBUpdater();
+				updater.setDatabase(getCouchDatabase(application, domainClass.databaseId, false))
+				updater.setCreateDatabase(false)
+				updater.setDesignDocumentDir(views)
+				updater.setDesignName(domainClass.designName)
+				updater.updateDesignDocuments()
+
+			}
 		}
 	}
 
@@ -525,17 +538,30 @@ public class CouchdbPluginSupport {
 		}
 	}
 
-	private static Database getCouchDatabase(GrailsApplication application) {
+	private static Database getCouchDatabase(GrailsApplication application, String dbId, boolean createDatabase) {
 		def ds = application.config.couchdb
 
 		String host = ds?.host ?: "localhost"
 		Integer port = (ds?.port ?: 5984) as Integer
-		String database = ds?.database ?: application.metadata["app.name"]
+		String database = ds?.database ?: (dbId ?: application.metadata["app.name"])
 		String username = ds?.username ?: ""
 		String password = ds?.password ?: ""
 
 		String realm = ds?.realm ?: null
 		String scheme = ds?.scheme ?: null
+
+		// get the datasource configuration for this specific db (if any)
+		if (dbId && ds[dbId]) {
+			ds = ds[dbId]
+
+			host = ds.host ?: host
+			port = ds.port ?: port
+			database = ds.database ?: database
+			username = ds.username ?: username
+			password = ds.password ?: password
+			realm = ds.realm ?: realm
+			scheme = ds.scheme ?: scheme
+		}
 
 		Database db = new Database(host, port, database)
 
@@ -550,6 +576,12 @@ public class CouchdbPluginSupport {
 			}
 
 			db.server.setCredentials(authScope, credentials)
+		}
+
+		if (createDatabase) {
+			if (db.getServer().createDatabase(db.getName())) {
+				log.info("Database [${db.getName()}] created.");
+			}
 		}
 
 		DefaultTypeConverterRepository typeConverterRepository = new DefaultTypeConverterRepository();

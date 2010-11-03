@@ -36,4 +36,6 @@ public @interface CouchEntity {
 
     String type();
 
+	String db();
+
 }
