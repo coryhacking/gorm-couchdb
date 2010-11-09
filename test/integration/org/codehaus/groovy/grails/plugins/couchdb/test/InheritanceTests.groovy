@@ -13,23 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.acme
+package org.codehaus.groovy.grails.plugins.couchdb.test
 
-import grails.plugins.couchdb.CouchEntity
+import org.acme.Contact
+import org.acme.Person
 
 /**
  *
- * @author Warner Onstine, Cory Hacking
+ * @author Cory Hacking
  */
-@CouchEntity
-class Contact extends Person {
+class InheritanceTests extends GroovyTestCase {
 
-    String company
-    Address address = new Address()
+	void testDefaultType() {
 
-    static constraints = {
-        company nullable: true
-    }
+		def p = new Person()
+		assertEquals "should be using the default type for person", 'person', p.type
+
+		def c = new Contact()
+		assertEquals "should be using the default type for contact", 'person.contact', c.type
+
+	}
 }
-
-

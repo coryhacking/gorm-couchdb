@@ -70,8 +70,7 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 	private CouchDomainClassProperty identifier;
 	private CouchDomainClassProperty version;
 	private CouchDomainClassProperty attachments;
-	private String type;
-	private String typeFieldName;
+
 	private String databaseId;
 	private String designName;
 
@@ -93,36 +92,35 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 		this.defaultConstraints = defaultConstraints;
 		this.shouldFailOnError = shouldFailOnError;
 
-		// try to read the "type" annotation property
+		// try to read the "designName" annotation property
 		try {
-			type = entityAnnotation.type();
-
-			// if the type annotation is empty, then disable type handling
-			if ("".equals(type)) {
-				type = null;
+			designName = entityAnnotation.designName();
+			if ("".equals(designName)) {
+				designName = null;
 			}
 		} catch (IncompleteAnnotationException ex) {
-
-			// if the type wasn't set, then use the domain class name
-			type = clazz.getSimpleName().toLowerCase();
+			designName = null;
 		}
 
-		// try to read the "type" annotation property
-		try {
-			typeFieldName = entityAnnotation.typeFieldName();
-			if ("".equals(typeFieldName)) {
-				typeFieldName = "type";
-			} else if ("class".equals(typeFieldName) || "metaClass".equals(typeFieldName)) {
-				throw new GrailsDomainException("The CouchEntity annotation parameter [typeFieldName] on Class [" + clazz.getName() + "] cannot be set to 'class' or 'metaClass'.");
+		// if the design wasn't set, then try to use the "type" annotation property
+		if (designName == null) {
+			try {
+				designName = entityAnnotation.type();
+			} catch (IncompleteAnnotationException ex) {
+				designName = null;
 			}
-		} catch (IncompleteAnnotationException ex) {
-			typeFieldName = "type";
 		}
 
-		// we always want a default design name even if the type is disabled
-		designName = (type != null) ? type : clazz.getSimpleName().toLowerCase();
+		// if designName is still empty, then use the class name
+		if (designName == null || "".equals(designName)) {
+			designName = clazz.getSimpleName().toLowerCase();
+		}
 
-		// try to read the "type" annotation property
+		if ("class".equals(designName) || "metaClass".equals(designName)) {
+			throw new GrailsDomainException("The CouchEntity annotation parameter [designName] on Class [" + clazz.getName() + "] cannot be set to 'class' or 'metaClass'.");
+		}
+
+		// try to read the "db" annotation property
 		try {
 			databaseId = entityAnnotation.db();
 
@@ -252,13 +250,13 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 		return this.attachments;
 	}
 
-	public String getType() {
-		return this.type;
-	}
-
-	public String getTypeFieldName() {
-		return this.typeFieldName;
-	}
+//	public String getType() {
+//		return this.type;
+//	}
+//
+//	public String getTypeFieldName() {
+//		return this.typeFieldName;
+//	}
 
 	public boolean getShouldFailOnError() {
 		return shouldFailOnError;

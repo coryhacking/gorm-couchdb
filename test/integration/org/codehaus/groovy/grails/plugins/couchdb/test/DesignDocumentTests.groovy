@@ -57,7 +57,7 @@ class DesignDocumentTests extends GroovyTestCase {
         def design = new DesignDocument();
 
         // add a temporary "open" view
-        design.addView("list", new View("function(doc) { if (doc.type == 'contact') { emit(doc.name, {name:doc.name, company:doc.company}); }}"))
+        design.addView("list", new View("function(doc) { if (doc.type == 'person.contact') { emit(doc.name, {name:doc.name, company:doc.company}); }}"))
 
         // save the design document
         Contact.saveDesignDocument(design)

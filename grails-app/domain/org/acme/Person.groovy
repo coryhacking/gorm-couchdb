@@ -22,13 +22,13 @@ import grails.plugins.couchdb.CouchEntity
  * @author Warner Onstine, Cory Hacking
  */
 @CouchEntity
-class Contact extends Person {
+class Person {
 
-    String company
-    Address address = new Address()
+    String name
+    Gender gender
 
     static constraints = {
-        company nullable: true
+        gender nullable: true
     }
 }
 
