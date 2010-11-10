@@ -16,14 +16,17 @@
 package org.codehaus.groovy.grails.plugins.couchdb.domain;
 
 import groovy.lang.Closure;
+import groovy.lang.GroovyObject;
 import groovy.util.ConfigObject;
 import groovy.util.Eval;
 
 import grails.plugins.couchdb.CouchEntity;
 import grails.util.ClosureToMapPopulator;
 import org.codehaus.groovy.grails.commons.ArtefactHandlerAdapter;
+import org.codehaus.groovy.grails.commons.ArtefactInfo;
 import org.codehaus.groovy.grails.commons.GrailsClass;
 import org.codehaus.groovy.grails.commons.GrailsClassUtils;
+import org.codehaus.groovy.grails.commons.GrailsDomainClass;
 import org.codehaus.groovy.grails.plugins.support.aware.GrailsConfigurationAware;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +59,49 @@ public class CouchDomainClassArtefactHandler extends ArtefactHandlerAdapter impl
 		}
 
 		return new CouchDomainClass(artefactClass, defaultConstraints, shouldFailOnError);
+	}
+
+	@Override
+	public void initialize(ArtefactInfo artefacts) {
+		log.debug("Configuring CouchDB domain class relationships...");
+
+		Map domainMap = artefacts.getGrailsClassesByName();
+
+		// configure sub class relationships
+		for (GrailsClass grailsClass : artefacts.getGrailsClasses()) {
+			CouchDomainClass domainClass = (CouchDomainClass) grailsClass;
+			if (!domainClass.isRoot()) {
+				Class<?> superClass = grailsClass.getClazz().getSuperclass();
+				while (!superClass.equals(Object.class) && !superClass.equals(GroovyObject.class)) {
+					GrailsDomainClass gdc = (GrailsDomainClass) domainMap.get(superClass.getName());
+					if (gdc == null || gdc.getSubClasses() == null) {
+						break;
+					}
+
+					gdc.getSubClasses().add((GrailsDomainClass) grailsClass);
+					superClass = superClass.getSuperclass();
+				}
+			}
+		}
+
+		// configure the subClassTypes map
+		for (GrailsClass grailsClass : artefacts.getGrailsClasses()) {
+			CouchDomainClass domainClass = (CouchDomainClass) grailsClass;
+
+			// initialize the subclasses
+			if (domainClass.hasSubClasses()) {
+				for (GrailsDomainClass subClass : domainClass.getSubClasses()) {
+
+					CouchEntity annotation = (CouchEntity) subClass.getClazz().getAnnotation(CouchEntity.class);
+					String typeFieldName = annotation.typeFieldName();
+
+					String type = subClass.getPropertyValue(typeFieldName, String.class);
+					if (type != null && !"".equals(type)) {
+						domainClass.getSubClassTypes().put(type, subClass);
+					}
+				}
+			}
+		}
 	}
 
 	public boolean isArtefactClass(Class clazz) {

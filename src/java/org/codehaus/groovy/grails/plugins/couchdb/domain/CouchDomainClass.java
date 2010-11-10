@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,10 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 	private boolean shouldFailOnError;
 
 	private Map<String, Object> defaultConstraints;
+
+	private Set subClasses = new HashSet();
+
+	private Map<String, GrailsDomainClass> subClassTypes = new HashMap<String, GrailsDomainClass>();
 
 	public CouchDomainClass(Class<?> clazz, Map<String, Object> defaultConstraints, boolean shouldFailOnError) {
 		super(clazz, "");
@@ -250,14 +255,6 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 		return this.attachments;
 	}
 
-//	public String getType() {
-//		return this.type;
-//	}
-//
-//	public String getTypeFieldName() {
-//		return this.typeFieldName;
-//	}
-
 	public boolean getShouldFailOnError() {
 		return shouldFailOnError;
 	}
@@ -336,11 +333,20 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 	}
 
 	public boolean isRoot() {
-		return true;
+		return getClazz().getSuperclass().equals(Object.class);
 	}
 
+	public boolean hasSubClasses() {
+		return subClasses.size() > 0;
+	}
+
+	@SuppressWarnings ({"unchecked"})
 	public Set<GrailsDomainClass> getSubClasses() {
-		return Collections.emptySet();
+		return subClasses;
+	}
+
+	public Map<String, GrailsDomainClass> getSubClassTypes() {
+		return subClassTypes;
 	}
 
 	public void refreshConstraints() {
@@ -357,10 +363,6 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 				property.getComponent().refreshConstraints();
 			}
 		}
-	}
-
-	public boolean hasSubClasses() {
-		return getSubClasses().size() > 0;
 	}
 
 	public Map getMappedBy() {

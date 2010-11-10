@@ -46,7 +46,10 @@ import org.springframework.validation.Errors
 import org.svenson.JSON
 import org.svenson.JSONConfig
 import org.svenson.JSONParser
+import org.svenson.PropertyValueBasedTypeMapper
 import org.svenson.converter.DefaultTypeConverterRepository
+
+import org.codehaus.groovy.grails.plugins.couchdb.json.CouchDomainTypeMapper
 
 /**
  *
@@ -54,11 +57,11 @@ import org.svenson.converter.DefaultTypeConverterRepository
  */
 public class CouchDBPluginSupport {
 
-	private static final Log log = LogFactory.getLog(CouchDBPluginSupport.class);
+	private static final Log log = LogFactory.getLog(CouchDBPluginSupport.class)
 
-	private static final String ARGUMENT_VALIDATE = "validate";
-	private static final String ARGUMENT_FAIL_ON_ERROR = "failOnError";
-	private static final String FAIL_ON_ERROR_CONFIG_PROPERTY = "grails.gorm.failOnError";
+	private static final String ARGUMENT_VALIDATE = "validate"
+	private static final String ARGUMENT_FAIL_ON_ERROR = "failOnError"
+	private static final String FAIL_ON_ERROR_CONFIG_PROPERTY = "grails.gorm.failOnError"
 
 	static final PROPERTY_INSTANCE_MAP = new SoftThreadLocalMap()
 
@@ -135,7 +138,7 @@ public class CouchDBPluginSupport {
 	static enhanceDomainClasses(GrailsApplication application, ApplicationContext ctx) {
 
 		application.CouchDomainClasses.each {CouchDomainClass domainClass ->
-			Database db = getCouchDatabase(application, domainClass.databaseId, true)
+			Database db = getCouchDatabase(application, domainClass, true)
 
 			addInstanceMethods(application, domainClass, ctx, db)
 			addStaticMethods(application, domainClass, ctx, db)
@@ -169,8 +172,8 @@ public class CouchDBPluginSupport {
 
 				// Note that by design any map / reduce functions that are in couchdb but NOT here get
 				// removed when updating.
-				GrailsCouchDBUpdater updater = new GrailsCouchDBUpdater();
-				updater.setDatabase(getCouchDatabase(application, domainClass.databaseId, false))
+				GrailsCouchDBUpdater updater = new GrailsCouchDBUpdater()
+				updater.setDatabase(getCouchDatabase(application, domainClass, false))
 				updater.setCreateDatabase(false)
 				updater.setDesignDocumentDir(views)
 				updater.setDesignName(domainClass.designName)
@@ -194,14 +197,14 @@ public class CouchDBPluginSupport {
 			boolean valid = (shouldValidate(args, domainClass)) ? validate() : true
 			if (!valid) {
 
-				boolean shouldFail = dc.shouldFailOnError;
+				boolean shouldFail = dc.shouldFailOnError
 				if (args != null && args.containsKey(ARGUMENT_FAIL_ON_ERROR)) {
-					shouldFail = GrailsClassUtils.getBooleanFromMap(ARGUMENT_FAIL_ON_ERROR, args);
+					shouldFail = GrailsClassUtils.getBooleanFromMap(ARGUMENT_FAIL_ON_ERROR, args)
 				}
 				if (shouldFail) {
-					throw new ValidationException("Validation Error(s) occurred during save()", delegate.errors);
+					throw new ValidationException("Validation Error(s) occurred during save()", delegate.errors)
 				}
-				return null;
+				return null
 			}
 
 			couchdb.createOrUpdateDocument autoTimeStamp(application, delegate)
@@ -234,7 +237,7 @@ public class CouchDBPluginSupport {
 		}
 
 		metaClass.toJSON = {->
-			return db.jsonConfig.getJsonGenerator().forValue(delegate);
+			return db.jsonConfig.getJsonGenerator().forValue(delegate)
 		}
 	}
 
@@ -243,9 +246,22 @@ public class CouchDBPluginSupport {
 		def domainClass = dc
 		def couchdb = db
 
+		def readParser = null
+		def queryParser = null
+
+		// if we have subclasses, then create a special parser that has the appropriate
+		// subclass type mappings for get and query results
+		if (domainClass.hasSubClasses()) {
+			readParser = new JSONParser(db.getJsonConfig().jsonParser)
+			setDocTypeMapper domainClass, readParser
+
+			queryParser = new JSONParser(db.getJsonConfig().jsonParser)
+			setQueryDocTypeMapper domainClass, queryParser
+		}
+
 		metaClass.static.get = {Serializable docId ->
 			try {
-				return couchdb.getDocument(domainClass.clazz, docId.toString())
+				return couchdb.getDocument(domainClass.clazz, docId.toString(), null, readParser)
 
 			} catch (NotFoundException e) {
 				// fall through to return null
@@ -311,7 +327,7 @@ public class CouchDBPluginSupport {
 
 			def result
 			if (isDocumentQuery(o)) {
-				result = couchdb.queryViewAndDocuments(view, Map.class, domainClass.clazz, getOptions(o), null)
+				result = couchdb.queryViewAndDocuments(view, Map.class, domainClass.clazz, getOptions(o), queryParser)
 			} else {
 				result = couchdb.queryView(view, Map.class, getOptions(o), null)
 			}
@@ -333,7 +349,7 @@ public class CouchDBPluginSupport {
 
 			def result
 			if (isDocumentQuery(o)) {
-				result = couchdb.queryViewAndDocumentsByKeys(view, Map.class, domainClass.clazz, convertKeys(keys), getOptions(o), null)
+				result = couchdb.queryViewAndDocumentsByKeys(view, Map.class, domainClass.clazz, convertKeys(keys), getOptions(o), queryParser)
 			} else {
 				result = couchdb.queryViewByKeys(view, Map.class, convertKeys(keys), getOptions(o), null)
 			}
@@ -415,14 +431,13 @@ public class CouchDBPluginSupport {
 				// assume that the list of keys (if any) is everything else
 				def keys = (args ?: [])
 				if (keys) {
-					return queryViewByKeys(view, keys, options);
+					return queryViewByKeys(view, keys, options)
 				} else {
 					return queryView(view, options)
 				}
 			} else {
 				def count = couchdb.queryView(view, Map.class, getOptions(options), null).getRows()
 				return (count ? count[0].value : 0) as Long
-
 			}
 		}
 	}
@@ -538,8 +553,9 @@ public class CouchDBPluginSupport {
 		}
 	}
 
-	private static Database getCouchDatabase(GrailsApplication application, String dbId, boolean createDatabase) {
+	private static Database getCouchDatabase(GrailsApplication application, CouchDomainClass domainClass, boolean createDatabase) {
 		def ds = application.config.couchdb
+		def dbId = domainClass.databaseId
 
 		String host = ds?.host ?: "localhost"
 		Integer port = (ds?.port ?: 5984) as Integer
@@ -580,30 +596,54 @@ public class CouchDBPluginSupport {
 
 		if (createDatabase) {
 			if (db.getServer().createDatabase(db.getName())) {
-				log.info("Database [${db.getName()}] created.");
+				log.info("Database [${db.getName()}] created.")
 			}
 		}
 
-		DefaultTypeConverterRepository typeConverterRepository = new DefaultTypeConverterRepository();
+		DefaultTypeConverterRepository typeConverterRepository = new DefaultTypeConverterRepository()
 		JsonDateConverter dateConverter = new JsonDateConverter()
-		typeConverterRepository.addTypeConverter(dateConverter);
+		typeConverterRepository.addTypeConverter(dateConverter)
 
-		JSON generator = new JSON();
-		generator.setIgnoredProperties(Arrays.asList("metaClass"));
-		generator.setTypeConverterRepository(typeConverterRepository);
-		generator.registerTypeConversion(java.util.Date.class, dateConverter);
-		generator.registerTypeConversion(java.sql.Date.class, dateConverter);
-		generator.registerTypeConversion(java.sql.Timestamp.class, dateConverter);
+		JSON generator = new JSON()
+		generator.setIgnoredProperties(Arrays.asList("metaClass"))
+		generator.setTypeConverterRepository(typeConverterRepository)
+		generator.registerTypeConversion(java.util.Date.class, dateConverter)
+		generator.registerTypeConversion(java.sql.Date.class, dateConverter)
+		generator.registerTypeConversion(java.sql.Timestamp.class, dateConverter)
 
-		JSONParser parser = new JSONParser();
-		parser.setTypeConverterRepository(typeConverterRepository);
-		parser.registerTypeConversion(java.util.Date.class, dateConverter);
-		parser.registerTypeConversion(java.sql.Date.class, dateConverter);
-		parser.registerTypeConversion(java.sql.Timestamp.class, dateConverter);
+		JSONParser parser = new JSONParser()
+		parser.setTypeConverterRepository(typeConverterRepository)
+		parser.registerTypeConversion(java.util.Date.class, dateConverter)
+		parser.registerTypeConversion(java.sql.Date.class, dateConverter)
+		parser.registerTypeConversion(java.sql.Timestamp.class, dateConverter)
 
-		db.jsonConfig = new JSONConfig(generator, parser);
+		db.jsonConfig = new JSONConfig(generator, parser)
 
 		return db
+	}
+
+	private static void setDocTypeMapper(CouchDomainClass domainClass, JSONParser parser) {
+		CouchDomainTypeMapper mapper = new CouchDomainTypeMapper()
+
+		mapper.setParsePathInfo ""
+
+		domainClass.getSubClassTypes().each {type, dc ->
+			mapper.addFieldValueMapping(type, dc.clazz)
+		}
+
+		parser.setTypeMapper mapper
+	}
+
+	private static void setQueryDocTypeMapper(CouchDomainClass domainClass, JSONParser parser) {
+		CouchDomainTypeMapper mapper = new CouchDomainTypeMapper()
+
+		mapper.setParsePathInfo ".rows[].doc"
+
+		domainClass.getSubClassTypes().each {type, dc ->
+			mapper.addFieldValueMapping(type, dc.clazz)
+		}
+
+		parser.setTypeMapper mapper
 	}
 
 	private static Options getOptions(Map o) {
