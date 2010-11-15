@@ -28,17 +28,21 @@ import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
 import org.codehaus.groovy.grails.plugins.DomainClassPluginSupport
 import org.codehaus.groovy.grails.plugins.couchdb.domain.CouchDomainClass
 import org.codehaus.groovy.grails.plugins.couchdb.domain.CouchDomainClassArtefactHandler
+import org.codehaus.groovy.grails.plugins.couchdb.json.CouchDomainTypeMapper
 import org.codehaus.groovy.grails.plugins.couchdb.json.JsonConverterUtils
 import org.codehaus.groovy.grails.plugins.couchdb.json.JsonDateConverter
 import org.codehaus.groovy.grails.plugins.couchdb.util.GrailsCouchDBUpdater
 import org.codehaus.groovy.grails.support.SoftThreadLocalMap
 import org.codehaus.groovy.grails.validation.GrailsDomainClassValidator
+import org.codehaus.groovy.grails.web.binding.DataBindingLazyMetaPropertyMap
+import org.codehaus.groovy.grails.web.binding.DataBindingUtils
 import org.jcouchdb.db.Database
 import org.jcouchdb.db.Options
 import org.jcouchdb.document.Attachment
 import org.jcouchdb.document.DesignDocument
 import org.jcouchdb.document.ValueRow
 import org.jcouchdb.exception.NotFoundException
+import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean
 import org.springframework.context.ApplicationContext
 import org.springframework.validation.BeanPropertyBindingResult
@@ -46,10 +50,7 @@ import org.springframework.validation.Errors
 import org.svenson.JSON
 import org.svenson.JSONConfig
 import org.svenson.JSONParser
-import org.svenson.PropertyValueBasedTypeMapper
 import org.svenson.converter.DefaultTypeConverterRepository
-
-import org.codehaus.groovy.grails.plugins.couchdb.json.CouchDomainTypeMapper
 
 /**
  *
@@ -146,6 +147,7 @@ public class CouchDBPluginSupport {
 
 			addValidationMethods(application, domainClass, ctx)
 
+			addPropertiesSupport(application, domainClass, ctx)
 		}
 
 		// update the related document view(s)
@@ -500,6 +502,26 @@ public class CouchDBPluginSupport {
 				// validate this instance
 				DomainClassPluginSupport.validateInstance(delegate, ctx)
 			}
+		}
+	}
+
+	private static addPropertiesSupport(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx) {
+		def metaClass = dc.metaClass
+		def domainClass = dc
+
+		metaClass.constructor = { Map map ->
+			def instance = ctx.containsBean(domainClass.fullName) ? ctx.getBean(domainClass.fullName) : BeanUtils.instantiateClass(domainClass.clazz)
+			DataBindingUtils.bindObjectToDomainInstance(domainClass, instance, map)
+			DataBindingUtils.assignBidirectionalAssociations(instance, map, domainClass)
+			return instance
+		}
+
+		metaClass.setProperties = {Object o ->
+			DataBindingUtils.bindObjectToDomainInstance(domainClass, delegate, o)
+		}
+
+		metaClass.getProperties = {->
+			new DataBindingLazyMetaPropertyMap(delegate)
 		}
 	}
 

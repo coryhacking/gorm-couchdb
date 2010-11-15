@@ -25,7 +25,7 @@ import org.springframework.core.io.Resource
 class GormCouchdbGrailsPlugin {
 
 	// the plugin version
-	def version = '0.8.1'
+	def version = '0.8.2'
 
 	// the version or versions of Grails the plugin is designed for
 	def grailsVersion = '1.2 > *'
@@ -33,6 +33,7 @@ class GormCouchdbGrailsPlugin {
 	// the other plugins this plugin depends on
 	def dependsOn = [
 			core: '1.2 > *',
+			domainClass: '1.2 > *',
 			hibernate: '1.2 > *'
 	]
 
