@@ -40,29 +40,27 @@ class AttachmentsTests extends GroovyTestCase {
         p.save()
 
         def att = new File("grails-app/conf/DataSource.groovy")
-        p.saveAttachment(att.path, "text/plain", att.newInputStream(), att.length())
+        p = p.saveAttachment(att.path, "text/plain", att.newInputStream(), att.length())
 
-        p = Project.get(id)
         assertEquals "should have one attachment", 1, p.attachments.size()
         assertEquals "contentType should be 'text/plain'", 'text/plain', p.attachments[att.path].contentType
         assertEquals "length should be '${att.length()}", att.length(), p.attachments[att.path].length
-		p.save()
 
-        def att2 = new File("grails-app/conf/UrlMappings.groovy")
-        p.saveAttachment(att2.path, "text/plain", att2.newInputStream(), att2.length())
+        def att2 = new File("grails-app/conf/Config.groovy")
+		def att3 = new File("grails-app/conf/UrlMappings.groovy")
+        p = p.saveAttachment(att2.path, "text/plain", att2.newInputStream(), att2.length())
+		p = p.saveAttachment(att3.path, "text/plain", att3.newInputStream(), att3.length())
 
-        p = Project.get(id)
-        assertEquals "should have two attachments", 2, p.attachments.size()
+        assertEquals "should have three attachments", 3, p.attachments.size()
         assertNotNull "attachment name should be ${att.path}", p.attachments[att.path]
         assertNotNull "attachment name should be ${att2.path}", p.attachments[att2.path]
 
         p.readAttachment(att.path)
         p.readAttachment(att2.path)
 
-        p.deleteAttachment(att.path)
+        p = p.deleteAttachment(att.path)
 
-        p = Project.get(id)
-        assertEquals "should have one attachmens", 1, p.attachments.size()
+        assertEquals "should have two attachmens", 2, p.attachments.size()
 
         p.delete()
     }

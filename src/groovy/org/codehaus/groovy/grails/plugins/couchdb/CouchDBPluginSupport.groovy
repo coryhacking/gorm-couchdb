@@ -186,9 +186,9 @@ public class CouchDBPluginSupport {
 	}
 
 	private static addInstanceMethods(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
-		def metaClass = dc.metaClass
-		def domainClass = dc
-		def couchdb = db
+		MetaClass metaClass = dc.metaClass
+		CouchDomainClass domainClass = dc
+		Database couchdb = db
 
 		metaClass.save = {->
 			save(null)
@@ -227,15 +227,18 @@ public class CouchDBPluginSupport {
 		}
 
 		metaClass.saveAttachment = {Serializable attachmentId, String contentType, byte[] data ->
-			return couchdb.createAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString(), contentType, data)
+			couchdb.createAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString(), contentType, data)
+			return domainClass.getClazz().get(getDocumentId(domainClass, delegate))
 		}
 
 		metaClass.saveAttachment = {Serializable attachmentId, String contentType, InputStream is, long length ->
-			return couchdb.createAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString(), contentType, is, length)
+			couchdb.createAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString(), contentType, is, length)
+			return domainClass.getClazz().get(getDocumentId(domainClass, delegate))
 		}
 
 		metaClass.deleteAttachment = {Serializable attachmentId ->
-			return couchdb.deleteAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString())
+			couchdb.deleteAttachment(getDocumentId(domainClass, delegate), getDocumentVersion(domainClass, delegate), attachmentId.toString())
+			return domainClass.getClazz().get(getDocumentId(domainClass, delegate))
 		}
 
 		metaClass.toJSON = {->
@@ -244,12 +247,12 @@ public class CouchDBPluginSupport {
 	}
 
 	private static addStaticMethods(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
-		def metaClass = dc.metaClass
-		def domainClass = dc
-		def couchdb = db
+		MetaClass metaClass = dc.metaClass
+		CouchDomainClass domainClass = dc
+		Database couchdb = db
 
-		def readParser = null
-		def queryParser = null
+		JSONParser readParser = null
+		JSONParser queryParser = null
 
 		// if we have subclasses, then create a special parser that has the appropriate
 		// subclass type mappings for get and query results
@@ -449,8 +452,8 @@ public class CouchDBPluginSupport {
 	}
 
 	private static addValidationMethods(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx) {
-		def metaClass = dc.metaClass
-		def domainClass = dc
+		MetaClass metaClass = dc.metaClass
+		CouchDomainClass domainClass = dc
 
 		registerConstraintsProperty(metaClass, domainClass)
 
@@ -510,8 +513,8 @@ public class CouchDBPluginSupport {
 	}
 
 	private static addPropertiesSupport(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx) {
-		def metaClass = dc.metaClass
-		def domainClass = dc
+		MetaClass metaClass = dc.metaClass
+		CouchDomainClass domainClass = dc
 
 		metaClass.constructor = { Map map ->
 			def instance = ctx.containsBean(domainClass.fullName) ? ctx.getBean(domainClass.fullName) : BeanUtils.instantiateClass(domainClass.clazz)
@@ -569,6 +572,13 @@ public class CouchDBPluginSupport {
 		def version = dc.getVersion()
 		if (version) {
 			domain[version.name]
+		}
+	}
+
+	private static void setDocumentVersion(CouchDomainClass dc, Object domain, String newVersion) {
+		def version = dc.getVersion()
+		if (version) {
+			domain[version.name] = newVersion
 		}
 	}
 
