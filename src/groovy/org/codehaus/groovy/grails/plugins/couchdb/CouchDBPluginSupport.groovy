@@ -253,11 +253,11 @@ public class CouchDBPluginSupport {
 
 		// if we have subclasses, then create a special parser that has the appropriate
 		// subclass type mappings for get and query results
-		if (domainClass.hasSubClasses()) {
-			readParser = new JSONParser(db.getJsonConfig().jsonParser)
-			setDocTypeMapper domainClass, readParser
+		readParser = new JSONParser(db.getJsonConfig().jsonParser)
+		queryParser = new JSONParser(db.getJsonConfig().jsonParser)
 
-			queryParser = new JSONParser(db.getJsonConfig().jsonParser)
+		if (domainClass.hasSubClasses()) {
+			setDocTypeMapper domainClass, readParser
 			setQueryDocTypeMapper domainClass, queryParser
 		}
 
@@ -389,6 +389,10 @@ public class CouchDBPluginSupport {
 
 		metaClass.static.deleteDesignDocument = {DesignDocument doc ->
 			return couchdb.delete(doc)
+		}
+
+		metaClass.static.parse = {json ->
+			return readParser.parse(dc.clazz, json as String)
 		}
 	}
 
