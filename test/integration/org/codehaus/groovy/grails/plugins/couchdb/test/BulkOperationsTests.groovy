@@ -124,6 +124,11 @@ class BulkOperationsTests extends GroovyTestCase {
 		result = Task.list(max: 10, include_docs: true)
 		assertEquals "should have found 10 tasks", 10, result.size()
 		assertNotNull "results should include docs", result[0].document
+		result.each {info ->
+			println info
+			assertNotNull "description should not be null", info.description
+			assertTrue "estimatedHours should be > 0", info.estimatedHours > 0
+		}
 
         result = Task.listOpenTasksByName("order": "desc")
         assertEquals "should have found 20 open tasks", 20, result.size()
@@ -150,8 +155,14 @@ class BulkOperationsTests extends GroovyTestCase {
         assertEquals "should have found 3 open tasks", 3, result.size()
         assertEquals "should have found task #15", "task-15", result[0].key
 
-        result = Task.findByProjectIdAndName(["gorm-couchdb", "task-1"])
+        result = Task.findByProjectIdAndName(["gorm-couchdb", "task-1"], include_docs: true)
+		assertEquals "should have found 1 tasks", 1, result.size()
         assertEquals "should have found 'gorm-couchdb-task-1'", "gorm-couchdb-task-1", result[0].id
+		result.each {info ->
+			println info
+			assertNotNull "description should not be null", info.description
+			assertTrue "estimatedHours should be > 0", info.estimatedHours > 0
+		}
     }
 
     void testBulkDelete() {

@@ -51,6 +51,7 @@ import org.svenson.JSON
 import org.svenson.JSONConfig
 import org.svenson.JSONParser
 import org.svenson.converter.DefaultTypeConverterRepository
+import org.jcouchdb.document.ValueAndDocumentRow
 
 /**
  *
@@ -77,6 +78,10 @@ public class CouchDBPluginSupport {
 				Map map = delegate.value
 
 				if (!map.containsKey(name)) {
+					if (delegate instanceof ValueAndDocumentRow) {
+						return delegate.document."${name}"
+					}
+
 					throw new MissingPropertyException(name)
 				}
 
@@ -93,6 +98,10 @@ public class CouchDBPluginSupport {
 				return value
 
 			} else {
+				if (delegate instanceof ValueAndDocumentRow) {
+					return delegate.document."${name}"
+				}
+
 				throw new MissingPropertyException(name)
 			}
 		}
