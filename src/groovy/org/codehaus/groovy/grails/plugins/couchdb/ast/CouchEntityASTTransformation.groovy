@@ -109,14 +109,8 @@ class CouchEntityASTTransformation implements ASTTransformation {
 
 	private void injectEntityType(ClassNode classNode, AnnotationNode entity) {
 
-		String typeValue = entity.members["type"]?.value
-
-		if (typeValue == null) {
-
-			// get the class name(s) including parent domain objects
-			typeValue = getDomainClassHierarchy(classNode).toLowerCase()
-		}
-
+		// get the class type
+		String typeValue = getDomainTypeValue(classNode, entity).toLowerCase()
 		String typeFieldName = entity.members["typeFieldName"]?.value ?: "type"
 
 		// inject the type property if it doesn't already exist
@@ -126,13 +120,13 @@ class CouchEntityASTTransformation implements ASTTransformation {
 			MethodNode getter = getLocalGetterMethod(classNode, getterName)
 			if (getter == null) {
 				getter = new MethodNode(getterName,
-						Modifier.PUBLIC,
-						STRING_TYPE,
-						Parameter.EMPTY_ARRAY,
-						null,
-						new ReturnStatement(
-								new ConstantExpression(typeValue)
-						))
+					Modifier.PUBLIC,
+					STRING_TYPE,
+					Parameter.EMPTY_ARRAY,
+					null,
+					new ReturnStatement(
+						new ConstantExpression(typeValue)
+					))
 
 				setJsonPropertyAnnotation(getter, ["readOnly": ConstantExpression.TRUE])
 
@@ -189,19 +183,19 @@ class CouchEntityASTTransformation implements ASTTransformation {
 
 	private void fixupToStringMethod(ClassNode classNode, FieldNode idNode) {
 
-		MethodNode method = classNode.getDeclaredMethod("toString", [] as Parameter[]);
+		MethodNode method = classNode.getDeclaredMethod("toString", [] as Parameter[])
 		if (method != null && method.lineNumber < 0 && (method.isPublic() || method.isProtected()) && !method.isAbstract()) {
-			GStringExpression ge = new GStringExpression(classNode.getName() + ' : ${' + idNode.name + '}');
-			ge.addString(new ConstantExpression(classNode.getName() + " : "));
-			ge.addValue(new VariableExpression(idNode.name));
+			GStringExpression ge = new GStringExpression(classNode.getName() + ' : ${' + idNode.name + '}')
+			ge.addString(new ConstantExpression(classNode.getName() + " : "))
+			ge.addValue(new VariableExpression(idNode.name))
 
 			method.variableScope.removeReferencedClassVariable("id")
 			method.variableScope.putReferencedClassVariable(idNode)
 
-			method.code = new ReturnStatement(ge);
+			method.code = new ReturnStatement(ge)
 
 			if (log.isDebugEnabled()) {
-				log.debug("Changing method [toString()] on class [" + classNode.getName() + "] to use id field [" + id + "]");
+				log.debug("Changing method [toString()] on class [" + classNode.getName() + "] to use id field [" + id + "]")
 			}
 		}
 	}
@@ -330,13 +324,13 @@ class CouchEntityASTTransformation implements ASTTransformation {
 				MethodNode getter = getLocalGetterMethod(classNode, getterName)
 				if (getter == null) {
 					getter = new MethodNode(getterName,
-							Modifier.PUBLIC,
-							field.getType(),
-							Parameter.EMPTY_ARRAY,
-							null,
-							new ReturnStatement(
-									new FieldExpression(field)
-							))
+						Modifier.PUBLIC,
+						field.getType(),
+						Parameter.EMPTY_ARRAY,
+						null,
+						new ReturnStatement(
+							new FieldExpression(field)
+						))
 
 					classNode.addMethod(getter)
 				}
@@ -349,15 +343,15 @@ class CouchEntityASTTransformation implements ASTTransformation {
 				MethodNode setter = getLocalSetterMethod(classNode, setterName)
 				if (setter == null) {
 					setter = new MethodNode(setterName,
-							Modifier.PUBLIC,
-							ClassHelper.VOID_TYPE,
-							new Parameter(field.getType(), "value") as Parameter[],
-							null,
-							new ExpressionStatement(
-									new BinaryExpression(
-											new FieldExpression(field),
-											Token.newSymbol(Types.EQUAL, -1, -1),
-											new VariableExpression("value"))))
+						Modifier.PUBLIC,
+						ClassHelper.VOID_TYPE,
+						new Parameter(field.getType(), "value") as Parameter[],
+						null,
+						new ExpressionStatement(
+							new BinaryExpression(
+								new FieldExpression(field),
+								Token.newSymbol(Types.EQUAL, -1, -1),
+								new VariableExpression("value"))))
 
 					classNode.addMethod(setter)
 				}
@@ -369,8 +363,8 @@ class CouchEntityASTTransformation implements ASTTransformation {
 				for (Iterator it = field.annotations.iterator(); it.hasNext();) {
 					AnnotationNode node = (AnnotationNode) it.next()
 					if (JSON_PROPERTY.equals(node.getClassNode()) ||
-							JSON_TYPE_HINT.equals(node.getClassNode()) ||
-							JSON_CONVERTER.equals(node.getClassNode())) {
+						JSON_TYPE_HINT.equals(node.getClassNode()) ||
+						JSON_CONVERTER.equals(node.getClassNode())) {
 
 						it.remove()
 					}
@@ -455,36 +449,62 @@ class CouchEntityASTTransformation implements ASTTransformation {
 	private MethodNode getLocalGetterMethod(ClassNode classNode, String getterName) {
 		for (MethodNode method: classNode.getDeclaredMethods(getterName)) {
 			if (getterName.equals(method.getName())
-					&& ClassHelper.VOID_TYPE != method.getReturnType()
-					&& method.getParameters().length == 0) {
-				return method;
+				&& ClassHelper.VOID_TYPE != method.getReturnType()
+				&& method.getParameters().length == 0) {
+
+				return method
 			}
 		}
 
-		return null;
+		return null
 	}
 
 	private MethodNode getLocalSetterMethod(ClassNode classNode, String setterName) {
 		for (MethodNode method: classNode.getDeclaredMethods(setterName)) {
 			if (setterName.equals(method.getName())
-					&& ClassHelper.VOID_TYPE == method.getReturnType()
-					&& method.getParameters().length == 1) {
-				return method;
+				&& ClassHelper.VOID_TYPE == method.getReturnType()
+				&& method.getParameters().length == 1) {
+
+				return method
 			}
 		}
 
-		return null;
+		return null
 	}
 
-	private String getDomainClassHierarchy(ClassNode classNode) {
-		String name = classNode.nameWithoutPackage
+	private String getDomainTypeValue(ClassNode classNode, AnnotationNode entity) {
 
-		ClassNode parent = classNode.getSuperClass();
+		// get the type...
+		String name = entity.members["type"]?.value
+
+		// if set to empty string, then return as this disables the type field.
+		if (name == "") {
+			return name
+		}
+
+		// if not set, then use the lower case class name
+		if (name == null) {
+			name = classNode.nameWithoutPackage.toLowerCase()
+		}
+
+		ClassNode parent = classNode.getSuperClass()
 		while (parent != null && !parent.getName().equals("java.lang.Object")) {
-			if (parent.getAnnotations(COUCH_ENTITY)?.size() > 0) {
-				name = parent.nameWithoutPackage + '.' + name
+			List<AnnotationNode> annotations = parent.getAnnotations(COUCH_ENTITY)
+
+			if (annotations?.size() > 0) {
+				String type = annotations[0].members["type"]?.value
+				if (type == null) {
+					type = parent.nameWithoutPackage.toLowerCase()
+				}
+
+				// if a type was specified (or defaulted), then prepend this
+				// to our current name.
+				if (type) {
+					name = type + (name ? '.' + name : '')
+				}
 			}
-			parent = parent.getSuperClass();
+
+			parent = parent.getSuperClass()
 		}
 
 		return name

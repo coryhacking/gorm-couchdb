@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 the original author or authors.
+ * Copyright 2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,11 @@ package org.acme
 import grails.plugins.couchdb.CouchEntity
 
 /**
+ * Class with type explicitly disabled for testing.
  *
- * @author Warner Onstine, Cory Hacking
+ * @author Cory Hacking
  */
-@CouchEntity(type = "human")
-class Person {
+@CouchEntity(type = "")
+class NoType {
 
-	String name
-	Gender gender
-
-	static constraints = {
-		gender nullable: true
-	}
 }
-
-

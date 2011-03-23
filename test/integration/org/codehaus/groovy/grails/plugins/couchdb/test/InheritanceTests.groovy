@@ -17,6 +17,10 @@ package org.codehaus.groovy.grails.plugins.couchdb.test
 
 import org.acme.Contact
 import org.acme.Person
+import org.acme.Project
+import org.acme.Task
+import org.acme.NoType
+import javax.el.MethodNotFoundException
 
 /**
  *
@@ -24,14 +28,23 @@ import org.acme.Person
  */
 class InheritanceTests extends GroovyTestCase {
 
-	void testDefaultType() {
+	void testType() {
 
-		def p = new Person()
-		assertEquals "should be using the default type for person", 'person', p.type
+		assertEquals "should be using the defined type for Person", 'human', new Person().type
 
-		def c = new Contact()
-		assertEquals "should be using the default type for contact", 'person.contact', c.type
+		assertEquals "should be using the default type for Contact", 'human.contact', new Contact().type
 
+		assertEquals "should be using the default type for Project", 'project', new Project().type
+
+		assertEquals "should be using the assigned type and type field for Task", 'project-task', new Task().meta
+
+		try {
+			def type = new NoType().type
+			fail "The type field shouldn't exist on the NoType class."
+
+		} catch (Exception e) {
+			assertTrue "should have thrown a MissingPropertyException instead of ${e.class.name}", e instanceof MissingPropertyException
+		}
 	}
 
 	void testSubType() {

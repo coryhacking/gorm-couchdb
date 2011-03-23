@@ -137,7 +137,13 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 				documentType = (String) getter.invoke(clazz.newInstance());
 			}
 		} catch (Exception e) {
-			log.error("Couldn't get document type for Class [" + clazz.getName() + "].", e);
+			if (e instanceof NoSuchMethodException && "".equals(entityAnnotation.type())) {
+				log.info("Document type is disabled for Class [" + clazz.getName() + "].");
+			} else {
+				log.error("Couldn't get document type for Class [" + clazz.getName() + "].", e);
+			}
+
+			documentType = "";
 		}
 
 		PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(clazz);

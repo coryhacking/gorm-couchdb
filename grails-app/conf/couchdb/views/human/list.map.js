@@ -1,8 +1,8 @@
 
 function(doc) {
-	if (doc.type.lastIndexOf('person', 0) === 0) {
+	if (doc.type.lastIndexOf('human', 0) === 0) {
 
-		var subType = doc.type.substring(5);
+		var subType = doc.type.substring(4);
 
 		// just emit the name
 		emit(doc.name, {name:doc.name, subType: subType});

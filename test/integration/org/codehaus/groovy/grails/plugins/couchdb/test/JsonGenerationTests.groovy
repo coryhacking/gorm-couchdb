@@ -30,7 +30,7 @@ class JsonGenerationTests extends GroovyTestCase {
     void testContact() {
 
         // predefined json string for a contact
-        String json = "{\"address\":{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street1\":\"100 Hollywood Blvd.\",\"street2\":null,\"zip\":null},\"company\":\"Acme, Corp.\",\"gender\":\"MALE\",\"_id\":\"26b5811b3701c30c75d11f9a412103fa\",\"name\":\"Tom Jones\",\"type\":\"person.contact\",\"_rev\":\"2-ba19afa3cf78e7350202cf0c095c9aa4\"}"
+        String json = "{\"address\":{\"city\":\"Los Angeles\",\"state\":\"CA\",\"street1\":\"100 Hollywood Blvd.\",\"street2\":null,\"zip\":null},\"company\":\"Acme, Corp.\",\"gender\":\"MALE\",\"_id\":\"26b5811b3701c30c75d11f9a412103fa\",\"name\":\"Tom Jones\",\"type\":\"human.contact\",\"_rev\":\"2-ba19afa3cf78e7350202cf0c095c9aa4\"}"
 
         def contact = new Contact()
 
