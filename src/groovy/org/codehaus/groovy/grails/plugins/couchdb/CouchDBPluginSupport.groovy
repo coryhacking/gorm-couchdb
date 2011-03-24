@@ -199,10 +199,6 @@ public class CouchDBPluginSupport {
 		CouchDomainClass domainClass = dc
 		Database couchdb = db
 
-		metaClass.save = {->
-			save(null)
-		}
-
 		metaClass.save = {Map args = [:] ->
 
 			boolean valid = (shouldValidate(args, domainClass)) ? validate() : true
