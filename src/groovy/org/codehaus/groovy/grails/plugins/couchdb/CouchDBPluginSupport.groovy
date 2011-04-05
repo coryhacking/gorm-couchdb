@@ -402,6 +402,18 @@ public class CouchDBPluginSupport {
 		metaClass.static.parse = {json ->
 			return readParser.parse(dc.clazz, json as String)
 		}
+
+		metaClass.static.getCouchdb = {
+			return couchdb
+		}
+
+		metaClass.static.getParser = {
+			return readParser
+		}
+
+		metaClass.static.getQueryParser = {
+			return queryParser
+		}
 	}
 
 	private static addDynamicFinderSupport(GrailsApplication application, CouchDomainClass dc, ApplicationContext ctx, Database db) {
