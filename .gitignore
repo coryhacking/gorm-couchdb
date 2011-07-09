@@ -1,0 +1,12 @@
+
+target
+.idea
+.settings
+.classpath
+.project
+plugin.xml
+*.zip
+*.iml
+out
+logs
+.DS_Store
