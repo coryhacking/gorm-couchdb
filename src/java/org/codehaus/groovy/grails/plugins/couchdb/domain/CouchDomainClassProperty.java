@@ -173,6 +173,13 @@ public class CouchDomainClassProperty implements GrailsDomainClassProperty {
 	public void setIdentity(boolean identity) {
 		this.identity = identity;
 	}
+	
+	public boolean isDerived() {
+	    return false;
+	}
+	
+	public void setDerived(boolean b) {
+	}
 
 	public boolean isOneToMany() {
 		return false;

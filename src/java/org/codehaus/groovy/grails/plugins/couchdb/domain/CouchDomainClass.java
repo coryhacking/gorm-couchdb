@@ -252,6 +252,10 @@ public class CouchDomainClass extends AbstractGrailsClass implements ExternalGra
 		return persistentPropertyArray;
 	}
 
+	public GrailsDomainClassProperty getPersistentProperty(String name) {
+		return persistentProperties.get(name);
+	}
+
 	public GrailsDomainClassProperty getIdentifier() {
 		return this.identifier;
 	}
